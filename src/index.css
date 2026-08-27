@@ -1,0 +1,51 @@
+@import "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap";
+@import "tailwindcss";
+
+:root {
+  --font-sans: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  --bg-main: #f5f2ed;
+  --bg-card: #ffffff;
+  --bg-pill: #f0ece6;
+  --bg-green-light: #e8f0ec;
+  --green-primary: #1f4a35;
+  --border-subtle: #e4e1db;
+  --text-main: #111110;
+  --text-muted: #8a8680;
+  --alert-red: #c24a1e;
+  --alert-red-bg: #fdf0eb;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f5f2ed;
+  color: #111110;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #f5f2ed;
+}
+::-webkit-scrollbar-thumb {
+  background: #e4e1db;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8a8680;
+}
