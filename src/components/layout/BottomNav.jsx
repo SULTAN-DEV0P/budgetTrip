@@ -1,10 +1,10 @@
 import React from 'react';
-import { Home, Search, Calendar, Wallet, Bookmark } from 'lucide-react';
+import { Home, Compass, Calendar, Wallet, Bookmark } from 'lucide-react';
 
 export function BottomNav({ screen, setScreen }) {
   const tabs = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'explore', label: 'Explore', icon: Search },
+    { id: 'results', label: 'Explore', icon: Compass },
     { id: 'mytrip', label: 'My Trip', icon: Calendar },
     { id: 'budget', label: 'Budget', icon: Wallet },
     { id: 'saved', label: 'Saved', icon: Bookmark },
@@ -14,7 +14,7 @@ export function BottomNav({ screen, setScreen }) {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-[#e4e1db] pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="max-w-md mx-auto flex">
         {tabs.map(({ id, label, icon: Icon }) => {
-          const isActive = screen === id;
+          const isActive = screen === id || (id === 'results' && screen === 'detail');
 
           return (
             <button
