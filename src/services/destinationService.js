@@ -1,59 +1,689 @@
-import { DESTINATIONS_DATA } from '../data/mockDestinations';
+import { getCurrencyForCountry, convertCurrency } from '../utils/currency';
 
-/**
- * Service to retrieve destination metadata and lists
- */
-
-export const destinationService = {
-  /**
-   * Get all supported destinations
-   * @returns {Promise<Array>}
-   */
-  async getAllDestinations() {
-    // Simulated async to mirror future API integration
-    return Object.values(DESTINATIONS_DATA).map(dest => ({
-      id: dest.id,
-      name: dest.name,
-      state: dest.state,
-      country: dest.country,
-      tagLine: dest.tagLine,
-      description: dest.description,
-      imageUrl: dest.imageUrl,
-      coordinates: dest.coordinates,
-      popularTags: dest.popularTags,
-      budgetTier: dest.budgetTier,
-      totalHotels: dest.hotels.length,
-      totalRestaurants: dest.restaurants.length,
-      totalActivities: dest.activities.length,
-    }));
+export const WORLD_DESTINATIONS = [
+  // --- AFRICA ---
+  {
+    id: 'lagos',
+    name: 'Lagos',
+    city: 'Lagos',
+    country: 'Nigeria',
+    continent: 'Africa',
+    flag: '🇳🇬',
+    currency: 'NGN',
+    priceIndexUSD: 65,
+    tag: 'Arts, Coast & Nightlife',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1618828665347-d870c38c95c7?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Nov – Feb (Dry Season & Detty December)',
+    visaInfo: 'Visa on Arrival / eVisa required for non-ECOWAS citizens',
+    plugType: 'Type D & G (230V, 50Hz)',
+    language: 'English, Yoruba, Pidgin',
+    emergencyNumber: '112 / 767',
+    tippingCustom: '5–10% in sit-down restaurants is appreciated',
+    description: 'Vibrant cultural mega-city bursting with contemporary art, Atlantic coastline beaches, and buzzing nightlife.',
+  },
+  {
+    id: 'abuja',
+    name: 'Abuja',
+    city: 'Abuja',
+    country: 'Nigeria',
+    continent: 'Africa',
+    flag: '🇳🇬',
+    currency: 'NGN',
+    priceIndexUSD: 70,
+    tag: 'Parks & Monoliths',
+    category: 'Cultural',
+    img: 'https://images.unsplash.com/photo-1537372023620-37161b1ad8ac?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Oct – Mar (Mild weather)',
+    visaInfo: 'Visa on Arrival / eVisa for non-ECOWAS',
+    plugType: 'Type D & G (230V, 50Hz)',
+    language: 'English, Hausa, Pidgin',
+    emergencyNumber: '112',
+    tippingCustom: '5–10% in upscale dining',
+    description: 'Modern planned capital with broad boulevards, green parks, and the monumental Zuma & Aso Rocks.',
+  },
+  {
+    id: 'cape-town',
+    name: 'Cape Town',
+    city: 'Cape Town',
+    country: 'South Africa',
+    continent: 'Africa',
+    flag: '🇿🇦',
+    currency: 'ZAR',
+    priceIndexUSD: 85,
+    tag: 'Table Mountain & Coastal Drives',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Dec – Mar (Warm summer)',
+    visaInfo: 'Visa-free for 90 days for many nationalities / eVisa',
+    plugType: 'Type D, M & N (230V, 50Hz)',
+    language: 'English, Afrikaans, Xhosa',
+    emergencyNumber: '10111 (Police) / 10177 (Ambulance)',
+    tippingCustom: '10–15% standard in restaurants and bars',
+    description: 'Breathtaking coastal city where dramatic mountain peaks meet pristine white-sand beaches and winelands.',
+  },
+  {
+    id: 'marrakech',
+    name: 'Marrakech',
+    city: 'Marrakech',
+    country: 'Morocco',
+    continent: 'Africa',
+    flag: '🇲🇦',
+    currency: 'MAD',
+    priceIndexUSD: 55,
+    tag: 'Medina Souks & Palaces',
+    category: 'Cultural',
+    img: 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Mar – May & Sep – Nov',
+    visaInfo: 'Visa-free for up to 90 days for US/EU/UK',
+    plugType: 'Type C & E (220V, 50Hz)',
+    language: 'Arabic, Berber, French',
+    emergencyNumber: '19 (Police) / 15 (Fire/Ambulance)',
+    tippingCustom: '10–15% in restaurants, small tips for guides/porters',
+    description: 'Enchanting imperial city with bustling souks, aromatic spices, intricate riads, and palace courtyards.',
+  },
+  {
+    id: 'cairo',
+    name: 'Cairo',
+    city: 'Cairo',
+    country: 'Egypt',
+    continent: 'Africa',
+    flag: '🇪🇬',
+    currency: 'EGP',
+    priceIndexUSD: 45,
+    tag: 'Pyramids & Nile Cruises',
+    category: 'Budget',
+    img: 'https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Oct – Apr (Pleasant winter temperatures)',
+    visaInfo: 'eVisa or Visa on Arrival available for 70+ countries',
+    plugType: 'Type C & F (220V, 50Hz)',
+    language: 'Arabic, English widely understood',
+    emergencyNumber: '122 (Police) / 123 (Ambulance)',
+    tippingCustom: 'Baksheesh (5–10%) is customary for almost all services',
+    description: 'Ancient cradle of civilization boasting the Great Pyramids of Giza, the Nile, and treasure-filled museums.',
+  },
+  {
+    id: 'nairobi',
+    name: 'Nairobi',
+    city: 'Nairobi',
+    country: 'Kenya',
+    continent: 'Africa',
+    flag: '🇰🇪',
+    currency: 'KES',
+    priceIndexUSD: 65,
+    tag: 'Safari Capital & Coffee Culture',
+    category: 'Tropical',
+    img: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Jul – Oct & Jan – Feb',
+    visaInfo: 'Electronic Travel Authorization (eTA) required',
+    plugType: 'Type G (240V, 50Hz)',
+    language: 'English, Swahili',
+    emergencyNumber: '999 / 112',
+    tippingCustom: '10% standard in restaurants and safari guides',
+    description: 'The world\'s only wildlife capital with a national park teeming with lions and rhinos right against the skyline.',
+  },
+  {
+    id: 'zanzibar',
+    name: 'Zanzibar',
+    city: 'Stone Town',
+    country: 'Tanzania',
+    continent: 'Africa',
+    flag: '🇹🇿',
+    currency: 'TZS',
+    priceIndexUSD: 75,
+    tag: 'Turquoise Waters & Spice Island',
+    category: 'Tropical',
+    img: 'https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Jun – Oct & Dec – Feb',
+    visaInfo: 'eVisa or Visa on Arrival ($50–$100)',
+    plugType: 'Type D & G (230V, 50Hz)',
+    language: 'Swahili, English',
+    emergencyNumber: '112',
+    tippingCustom: '10% in tourist restaurants',
+    description: 'Idyllic Indian Ocean archipelago with coral reefs, white sand sandbanks, and historic Stone Town.',
   },
 
-  /**
-   * Get complete details of a specific destination including all places
-   * @param {string} destinationId
-   * @returns {Promise<Object|null>}
-   */
-  async getDestinationById(destinationId) {
-    const key = destinationId.toLowerCase();
-    const dest = DESTINATIONS_DATA[key];
-    if (!dest) return null;
-    return { ...dest };
+  // --- ASIA & MIDDLE EAST ---
+  {
+    id: 'tokyo',
+    name: 'Tokyo',
+    city: 'Tokyo',
+    country: 'Japan',
+    continent: 'Asia',
+    flag: '🇯🇵',
+    currency: 'JPY',
+    priceIndexUSD: 110,
+    tag: 'Futuristic Metropolises & Cuisine',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Mar – May (Cherry Blossom) & Sep – Nov',
+    visaInfo: 'Visa-free for 68 countries (up to 90 days)',
+    plugType: 'Type A & B (100V, 50/60Hz)',
+    language: 'Japanese, English in transit hubs',
+    emergencyNumber: '110 (Police) / 119 (Ambulance/Fire)',
+    tippingCustom: 'No tipping! Exceptional service is built into the culture',
+    description: 'Neon-lit futuristic metropolis blending ancient shrines, Michelin dining, anime culture, and ultra-punctual trains.',
+  },
+  {
+    id: 'bali',
+    name: 'Bali',
+    city: 'Ubud & Seminyak',
+    country: 'Indonesia',
+    continent: 'Asia',
+    flag: '🇮🇩',
+    currency: 'IDR',
+    priceIndexUSD: 45,
+    tag: 'Tropical Villas & Waterfalls',
+    category: 'Tropical',
+    img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Apr – Oct (Dry sunny season)',
+    visaInfo: 'Visa on Arrival (VoA) approx $35 for 30 days',
+    plugType: 'Type C & F (230V, 50Hz)',
+    language: 'Indonesian, Balinese, English',
+    emergencyNumber: '112 / 110',
+    tippingCustom: '5–10% if service charge is not included',
+    description: 'Island of the Gods featuring lush rice terraces, sacred sea temples, surf breaks, and serene yoga retreats.',
+  },
+  {
+    id: 'dubai',
+    name: 'Dubai',
+    city: 'Dubai',
+    country: 'United Arab Emirates',
+    continent: 'Middle East',
+    flag: '🇦🇪',
+    currency: 'AED',
+    priceIndexUSD: 140,
+    tag: 'Skyline Luxury & Desert Dunes',
+    category: 'Luxury',
+    img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Nov – Mar (Comfortable winter warmth)',
+    visaInfo: 'Free 30-day visa on arrival for US/EU/UK/GCC and eVisa',
+    plugType: 'Type G (230V, 50Hz)',
+    language: 'Arabic, English is the primary lingua franca',
+    emergencyNumber: '999 (Police) / 998 (Ambulance)',
+    tippingCustom: '10–15% standard in restaurants',
+    description: 'Glittering oasis of super-skyscrapers, luxury mega-malls, golden desert safaris, and artificial palm islands.',
+  },
+  {
+    id: 'bangkok',
+    name: 'Bangkok',
+    city: 'Bangkok',
+    country: 'Thailand',
+    continent: 'Asia',
+    flag: '🇹🇭',
+    currency: 'THB',
+    priceIndexUSD: 50,
+    tag: 'Golden Temples & Street Eats',
+    category: 'Budget',
+    img: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Nov – Feb (Cool and dry season)',
+    visaInfo: 'Visa Exemption for 60+ countries (up to 60 days)',
+    plugType: 'Type A, B, C & F (230V, 50Hz)',
+    language: 'Thai, English in tourism centers',
+    emergencyNumber: '191 (Police) / 1155 (Tourist Police)',
+    tippingCustom: 'Small tips (20–50 THB) or 10% in restaurants',
+    description: 'Exhilarating sensory wonderland of ornate golden palaces, floating markets, rooftop bars, and Michelin street food.',
+  },
+  {
+    id: 'singapore',
+    name: 'Singapore',
+    city: 'Singapore',
+    country: 'Singapore',
+    continent: 'Asia',
+    flag: '🇸🇬',
+    currency: 'SGD',
+    priceIndexUSD: 130,
+    tag: 'Garden City & Hawker Feasts',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Year-round tropical climate (Nov – Jan rainiest)',
+    visaInfo: 'Visa-free for 90 days for most nationalities',
+    plugType: 'Type G (230V, 50Hz)',
+    language: 'English, Mandarin, Malay, Tamil',
+    emergencyNumber: '999 (Police) / 995 (Ambulance/Fire)',
+    tippingCustom: 'Not customary; 10% service charge is on bills',
+    description: 'Immaculate city-in-a-garden featuring futuristic Supertree groves, hawker center culinary treasures, and Marina Bay.',
+  },
+  {
+    id: 'seoul',
+    name: 'Seoul',
+    city: 'Seoul',
+    country: 'South Korea',
+    continent: 'Asia',
+    flag: '🇰🇷',
+    currency: 'KRW',
+    priceIndexUSD: 95,
+    tag: 'K-Wave, Palaces & BBQ',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Mar – May & Sep – Nov',
+    visaInfo: 'K-ETA or Visa-free for 110+ countries',
+    plugType: 'Type C & F (220V, 60Hz)',
+    language: 'Korean, English in subways/hotels',
+    emergencyNumber: '112 (Police) / 119 (Medical/Fire)',
+    tippingCustom: 'No tipping necessary or expected',
+    description: 'High-tech metropolis where centuries-old royal palaces sit next to cutting-edge fashion, K-Pop, and 24/7 food markets.',
   },
 
-  /**
-   * Search destinations by text query
-   * @param {string} query
-   * @returns {Promise<Array>}
-   */
-  async searchDestinations(query) {
-    if (!query) return this.getAllDestinations();
-    const q = query.toLowerCase().trim();
-    const all = await this.getAllDestinations();
-    return all.filter(
-      d =>
-        d.name.toLowerCase().includes(q) ||
-        d.state.toLowerCase().includes(q) ||
-        d.popularTags.some(t => t.toLowerCase().includes(q))
-    );
+  // --- EUROPE ---
+  {
+    id: 'paris',
+    name: 'Paris',
+    city: 'Paris',
+    country: 'France',
+    continent: 'Europe',
+    flag: '🇫🇷',
+    currency: 'EUR',
+    priceIndexUSD: 135,
+    tag: 'Art, Cafes & Haute Cuisine',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Apr – Jun & Sep – Nov',
+    visaInfo: 'Schengen Visa / ETIAS required for visa-exempt travelers',
+    plugType: 'Type C & E (230V, 50Hz)',
+    language: 'French, English widely spoken in tourist spots',
+    emergencyNumber: '112 (EU Emergency) / 15 (SAMU Medical)',
+    tippingCustom: 'Service is included; rounding up 5–10% is polite',
+    description: 'The City of Light famed for iconic monuments, world-class museums, Seine riverbanks, and timeless cafe terraces.',
   },
-};
+  {
+    id: 'london',
+    name: 'London',
+    city: 'London',
+    country: 'United Kingdom',
+    continent: 'Europe',
+    flag: '🇬🇧',
+    currency: 'GBP',
+    priceIndexUSD: 145,
+    tag: 'Royal Palaces & West End',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'May – Sep (Warmest daylight hours)',
+    visaInfo: 'UK Standard Visitor Visa / ETA for eligible nations',
+    plugType: 'Type G (230V, 50Hz)',
+    language: 'English',
+    emergencyNumber: '999 / 112',
+    tippingCustom: '10–12.5% in restaurants (often auto-added)',
+    description: 'Global cultural epicenter rich with history, world-renowned free museums, West End theaters, and historic pubs.',
+  },
+  {
+    id: 'rome',
+    name: 'Rome',
+    city: 'Rome',
+    country: 'Italy',
+    continent: 'Europe',
+    flag: '🇮🇹',
+    currency: 'EUR',
+    priceIndexUSD: 105,
+    tag: 'Colosseum & Pasta Culture',
+    category: 'Cultural',
+    img: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Apr – May & Sep – Oct',
+    visaInfo: 'Schengen Visa / ETIAS',
+    plugType: 'Type C, F & L (230V, 50Hz)',
+    language: 'Italian, English in tourism centers',
+    emergencyNumber: '112 (Universal EU Emergency)',
+    tippingCustom: 'Coperto (cover charge) is standard; €1–€2 per person tip is plenty',
+    description: 'The Eternal City where ancient Roman ruins, baroque piazzas, and authentic trattorias line every cobblestone street.',
+  },
+  {
+    id: 'santorini',
+    name: 'Santorini',
+    city: 'Oia & Fira',
+    country: 'Greece',
+    continent: 'Europe',
+    flag: '🇬🇷',
+    currency: 'EUR',
+    priceIndexUSD: 150,
+    tag: 'Caldera Sunsets & White Villas',
+    category: 'Luxury',
+    img: 'https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'May – Oct (Sun & swimming season)',
+    visaInfo: 'Schengen Visa / ETIAS',
+    plugType: 'Type C & F (230V, 50Hz)',
+    language: 'Greek, English widely spoken',
+    emergencyNumber: '112',
+    tippingCustom: '5–10% in tavernas and restaurants',
+    description: 'Cycladic volcanic island famed for whitewashed cliffside cliff villages, blue-domed churches, and magical caldera sunsets.',
+  },
+
+  // --- AMERICAS ---
+  {
+    id: 'new-york',
+    name: 'New York City',
+    city: 'New York',
+    country: 'United States',
+    continent: 'Americas',
+    flag: '🇺🇸',
+    currency: 'USD',
+    priceIndexUSD: 180,
+    tag: 'Broadway & Iconic Skylines',
+    category: 'Popular',
+    img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Sep – Nov (Autumn) & Apr – Jun (Spring)',
+    visaInfo: 'ESTA (Visa Waiver) or US B1/B2 Visitor Visa',
+    plugType: 'Type A & B (120V, 60Hz)',
+    language: 'English, Spanish',
+    emergencyNumber: '911',
+    tippingCustom: '18–22% expected in all sit-down dining and bars',
+    description: 'The city that never sleeps: Central Park, Broadway theaters, world-class museums, and diverse culinary neighborhoods.',
+  },
+  {
+    id: 'rio',
+    name: 'Rio de Janeiro',
+    city: 'Rio de Janeiro',
+    country: 'Brazil',
+    continent: 'Americas',
+    flag: '🇧🇷',
+    currency: 'BRL',
+    priceIndexUSD: 65,
+    tag: 'Copacabana & Christ the Redeemer',
+    category: 'Tropical',
+    img: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=800&h=600&fit=crop&auto=format',
+    bestTimeToVisit: 'Dec – Mar (Carnival & beach summer)',
+    visaInfo: 'eVisa / Visa-free for eligible nationalities',
+    plugType: 'Type C & N (127/220V, 60Hz)',
+    language: 'Portuguese',
+    emergencyNumber: '190 (Police) / 192 (Ambulance)',
+    tippingCustom: '10% "serviço" is typically included on the bill',
+    description: 'Marvelous City framed by granite peaks, rainforest hills, lively samba clubs, and legendary golden beaches.',
+  },
+];
+
+// Fallback / Live REST Countries Cache
+export async function fetchCountryEssentials(countryName) {
+  try {
+    const res = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=false`);
+    if (res.ok) {
+      const data = await res.json();
+      const country = data[0];
+      if (country) {
+        return {
+          countryName: country.name.common,
+          officialName: country.name.official,
+          capital: country.capital ? country.capital[0] : 'N/A',
+          region: country.region,
+          subregion: country.subregion,
+          population: country.population,
+          languages: country.languages ? Object.values(country.languages) : ['English'],
+          currencies: country.currencies
+            ? Object.entries(country.currencies).map(([code, c]) => ({
+                code,
+                name: c.name,
+                symbol: c.symbol || code,
+              }))
+            : [{ code: 'USD', name: 'US Dollar', symbol: '$' }],
+          flagSvg: country.flags?.svg || country.flags?.png,
+          timezones: country.timezones || ['UTC'],
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('REST Countries API fallback active', err);
+  }
+
+  // Fallback offline info
+  return {
+    countryName,
+    capital: 'Capital City',
+    region: 'Global',
+    subregion: 'International',
+    population: 10000000,
+    languages: ['Official Language'],
+    currencies: [{ code: getCurrencyForCountry(countryName), name: 'Local Currency', symbol: '$' }],
+    flagSvg: '',
+    timezones: ['UTC'],
+  };
+}
+
+// Dynamically generate authentic stays, restaurants, and activities for ANY destination
+export function generatePlacesForDestination(dest) {
+  const cur = dest.currency || getCurrencyForCountry(dest.country);
+  const baseUSD = dest.priceIndexUSD || 75;
+
+  const toCur = (usd) => Math.round(convertCurrency(usd, 'USD', cur));
+
+  return [
+    // Stays
+    {
+      id: `${dest.id}-hotel-1`,
+      type: 'hotel',
+      name: `${dest.city} Luxury Panorama Suites`,
+      rating: 4.8,
+      reviewCount: 480,
+      category: 'Luxury Boutique Resort',
+      location: {
+        address: `1 Central Grand Blvd, ${dest.city}`,
+        neighborhood: `${dest.city} Center`,
+      },
+      imageUrl: dest.img,
+      priceLevel: 4,
+      estimatedPrice: toCur(baseUSD * 1.8),
+      priceUnit: 'night',
+      currency: cur,
+      tags: ['Luxury', 'Panoramic View', 'Spa', 'Pool', 'Breakfast Included'],
+      description: `Signature premier stay in ${dest.city} with panoramic views, rooftop infinity pool, and luxury wellness spa.`,
+    },
+    {
+      id: `${dest.id}-hotel-2`,
+      type: 'hotel',
+      name: `${dest.city} Heritage Design Hotel`,
+      rating: 4.6,
+      reviewCount: 320,
+      category: 'Charming Boutique Stay',
+      location: {
+        address: `45 Old Town Way, ${dest.city}`,
+        neighborhood: 'Historic District',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 2,
+      estimatedPrice: toCur(baseUSD * 0.9),
+      priceUnit: 'night',
+      currency: cur,
+      tags: ['Boutique', 'Design', 'Quiet', 'Fast WiFi', 'Top Value'],
+      description: `Best-value contemporary hotel in the heart of ${dest.city} with curated local art and cozy courtyard.`,
+    },
+    {
+      id: `${dest.id}-hotel-3`,
+      type: 'hotel',
+      name: `${dest.city} Traveler Budget Suites`,
+      rating: 4.3,
+      reviewCount: 210,
+      category: 'Smart Budget Hotel',
+      location: {
+        address: `12 Station Square, ${dest.city}`,
+        neighborhood: 'Central Station',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 1,
+      estimatedPrice: toCur(baseUSD * 0.5),
+      priceUnit: 'night',
+      currency: cur,
+      tags: ['Budget-Friendly', 'Clean', 'Transit Hub', '24/7 Service'],
+      description: `Clean, modern budget suites equipped with comfortable bedding, strong AC, and walking distance to transit.`,
+    },
+
+    // Dining
+    {
+      id: `${dest.id}-food-1`,
+      type: 'restaurant',
+      name: `${dest.city} Gourmet Atelier`,
+      rating: 4.8,
+      reviewCount: 650,
+      category: 'Signature Fine Dining & Lounge',
+      location: {
+        address: `88 Promenade Ave, ${dest.city}`,
+        neighborhood: 'Waterfront',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 4,
+      estimatedPrice: toCur(baseUSD * 0.45),
+      priceUnit: 'meal',
+      currency: cur,
+      tags: ['Fine Dining', 'Local Flavors', 'Wine Pairings', 'Romantic'],
+      description: `Award-winning dining celebrating authentic ${dest.country} gastronomy with modern culinary innovation.`,
+    },
+    {
+      id: `${dest.id}-food-2`,
+      type: 'restaurant',
+      name: `${dest.city} Street Food Bistro`,
+      rating: 4.5,
+      reviewCount: 910,
+      category: 'Authentic Local Kitchen & Bistro',
+      location: {
+        address: `23 Market Lane, ${dest.city}`,
+        neighborhood: 'Night Market',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 2,
+      estimatedPrice: toCur(baseUSD * 0.2),
+      priceUnit: 'meal',
+      currency: cur,
+      tags: ['Street Food', 'Lively', 'Casual', 'Cocktails', 'Authentic'],
+      description: `Beloved local hotspot known for authentic flavors, generous portion sizes, and vibrant atmosphere.`,
+    },
+    {
+      id: `${dest.id}-food-3`,
+      type: 'restaurant',
+      name: `${dest.city} Artisan Coffee & Cafe`,
+      rating: 4.6,
+      reviewCount: 420,
+      category: 'Artisan Cafe & Bakery',
+      location: {
+        address: `14 Garden Square, ${dest.city}`,
+        neighborhood: 'Old Quarter',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1552611052-33e04de081de?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 1,
+      estimatedPrice: toCur(baseUSD * 0.12),
+      priceUnit: 'meal',
+      currency: cur,
+      tags: ['Brunch', 'Specialty Coffee', 'Bakery', 'Affordable'],
+      description: `Cozy sunlit cafe serving specialty roasted coffee, fresh artisan pastries, and healthy breakfast bowls.`,
+    },
+
+    // Activities
+    {
+      id: `${dest.id}-act-1`,
+      type: 'activity',
+      name: `${dest.city} Landmark Guided Experience`,
+      rating: 4.9,
+      reviewCount: 1420,
+      category: 'Iconic Sightseeing & Tour',
+      location: {
+        address: `Historic Center, ${dest.city}`,
+        neighborhood: 'Historic Center',
+      },
+      imageUrl: dest.img,
+      priceLevel: 2,
+      estimatedPrice: toCur(baseUSD * 0.25),
+      priceUnit: 'ticket',
+      currency: cur,
+      tags: ['Must-See', 'Culture', 'Photography', 'Guided Tour'],
+      description: `Explore the most famous landmarks, architectural treasures, and hidden alleys of ${dest.city}.`,
+    },
+    {
+      id: `${dest.id}-act-2`,
+      type: 'activity',
+      name: `${dest.city} Cultural Museum & Gallery`,
+      rating: 4.7,
+      reviewCount: 890,
+      category: 'Museum & Heritage Tour',
+      location: {
+        address: `Museum Park, ${dest.city}`,
+        neighborhood: 'Arts District',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 1,
+      estimatedPrice: toCur(baseUSD * 0.1),
+      priceUnit: 'ticket',
+      currency: cur,
+      tags: ['Culture', 'Heritage', 'Art', 'Top Rated'],
+      description: `World-class art collections, archaeological masterpieces, and interactive historical exhibits.`,
+    },
+    {
+      id: `${dest.id}-act-3`,
+      type: 'activity',
+      name: `${dest.city} Scenic Nature & Sunset Viewpoint`,
+      rating: 4.8,
+      reviewCount: 1120,
+      category: 'Outdoor & Scenic Viewpoint',
+      location: {
+        address: `Lookout Point, ${dest.city}`,
+        neighborhood: 'Hilltop / Coast',
+      },
+      imageUrl: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&h=600&fit=crop&auto=format',
+      priceLevel: 1,
+      estimatedPrice: 0, // Free entry
+      priceUnit: 'ticket',
+      currency: cur,
+      tags: ['Scenic View', 'Sunset', 'Nature', 'Free Entry', 'Outdoors'],
+      description: `Spectacular panoramic lookout point to watch unforgettable golden hour sunsets across ${dest.city}.`,
+    },
+  ];
+}
+
+// Generate default trip structure for a destination
+export function generateDefaultTripForDestination(dest, totalDays = 3, travelers = 2) {
+  const places = generatePlacesForDestination(dest);
+  const cur = dest.currency || getCurrencyForCountry(dest.country);
+  const baseUSD = dest.priceIndexUSD || 75;
+
+  const totalBudgetUSD = baseUSD * totalDays * travelers * 1.5;
+  const totalBudgetLocal = Math.round(convertCurrency(totalBudgetUSD, 'USD', cur));
+
+  const selectedHotel = places.find((p) => p.id === `${dest.id}-hotel-2`) || places[0];
+
+  const days = Array.from({ length: totalDays }, (_, i) => {
+    const dayNum = i + 1;
+    const dateStr = new Date(Date.now() + (dayNum - 1) * 86400000).toISOString().split('T')[0];
+
+    const morningAct = places.find((p) => p.id === `${dest.id}-act-${(i % 3) + 1}`) || places[places.length - 1];
+    const lunchFood = places.find((p) => p.id === `${dest.id}-food-2`) || places[4];
+    const eveningFood = i === 1 
+      ? (places.find((p) => p.id === `${dest.id}-food-1`) || places[3])
+      : (places.find((p) => p.id === `${dest.id}-food-3`) || places[5]);
+
+    return {
+      dayNumber: dayNum,
+      date: dateStr,
+      dailyBudgetLimit: Math.round(totalBudgetLocal / totalDays),
+      slots: [
+        {
+          slotId: `slot-${dayNum}-1`,
+          timeOfDay: 'morning',
+          place: morningAct,
+          notes: `Explore ${morningAct.name} during early morning hours`,
+        },
+        {
+          slotId: `slot-${dayNum}-2`,
+          timeOfDay: 'afternoon',
+          place: lunchFood,
+          notes: `Lunch and refreshing drinks at ${lunchFood.name}`,
+        },
+        {
+          slotId: `slot-${dayNum}-3`,
+          timeOfDay: 'evening',
+          place: eveningFood,
+          notes: `Dinner experience with local specialties`,
+        },
+      ],
+    };
+  });
+
+  return {
+    destinationId: dest.id,
+    destinationName: dest.name,
+    country: dest.country,
+    currency: cur,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + (totalDays - 1) * 86400000).toISOString().split('T')[0],
+    totalDays,
+    travelers,
+    totalBudget: totalBudgetLocal,
+    interests: ['Culture', 'Food', 'Nature', 'Art'],
+    accommodationPreference: 'budget',
+    selectedHotel,
+    days,
+  };
+}

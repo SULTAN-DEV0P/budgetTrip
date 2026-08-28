@@ -8,27 +8,17 @@ import {
   Minus,
   Plus,
   Check,
+  Globe2,
 } from 'lucide-react';
+import { WORLD_DESTINATIONS } from '../../services/destinationService';
+import { formatCurrency, getCurrencyForCountry } from '../../utils/currency';
 
-const INTERESTS = ['Art', 'Food', 'Nightlife', 'Culture', 'Nature', 'Beach', 'History'];
+const INTERESTS = ['Art', 'Food', 'Nightlife', 'Culture', 'Nature', 'Beach', 'History', 'Shopping', 'Adventure'];
 
 const STAY_OPTIONS = [
-  { id: 'cheapest', label: 'Cheapest', desc: 'Save the most' },
-  { id: 'budget', label: 'Budget', desc: 'Best value' },
-  { id: 'comfortable', label: 'Comfortable', desc: 'More comfort' },
-];
-
-const BUDGET_PRESETS = [
-  { label: '₦100k', value: 100000 },
-  { label: '₦150k', value: 150000 },
-  { label: '₦250k', value: 250000 },
-  { label: '₦500k', value: 500000 },
-];
-
-const DESTINATIONS = [
-  { id: 'lagos', name: 'Lagos, Nigeria' },
-  { id: 'abuja', name: 'Abuja, Nigeria' },
-  { id: 'abeokuta', name: 'Abeokuta, Nigeria' },
+  { id: 'cheapest', label: 'Budget Hostel & Suites', desc: 'Maximum savings & essential comfort' },
+  { id: 'budget', label: 'Boutique Mid-Range', desc: 'Best value design stay & breakfast' },
+  { id: 'comfortable', label: 'Luxury Panorama Resort', desc: 'Premium view, wellness spa & amenities' },
 ];
 
 export function SetupScreen({
@@ -36,18 +26,22 @@ export function SetupScreen({
   tripParams,
   setTripParams,
   onGenerateTrip,
+  onOpenDestinationPicker,
 }) {
-  const [destination, setDestination] = useState(tripParams?.destinationId || 'lagos');
+  const [destinationId, setDestinationId] = useState(tripParams?.destinationId || 'tokyo');
   const [travelers, setTravelers] = useState(tripParams?.travelers || 2);
-  const [budget, setBudget] = useState(tripParams?.totalBudget || 150000);
+  const [budget, setBudget] = useState(tripParams?.totalBudget || 2500);
   const [selectedInterests, setSelectedInterests] = useState(
-    tripParams?.interests || ['Art', 'Food']
+    tripParams?.interests || ['Culture', 'Food', 'Art']
   );
   const [stayPreference, setStayPreference] = useState(
     tripParams?.accommodationPreference || 'budget'
   );
-  const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-08-28');
-  const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-08-30');
+  const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-09-01');
+  const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-09-04');
+
+  const activeDest = WORLD_DESTINATIONS.find((d) => d.id === destinationId) || WORLD_DESTINATIONS[0];
+  const cur = activeDest.currency || getCurrencyForCountry(activeDest.country);
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) =>
@@ -57,18 +51,20 @@ export function SetupScreen({
 
   const handleBuildTrip = () => {
     const params = {
-      destinationId: destination,
+      destinationId: activeDest.id,
+      destinationName: activeDest.name,
+      country: activeDest.country,
+      currency: cur,
       startDate,
       endDate,
+      totalDays: 3,
       travelers,
       totalBudget: budget,
-      currency: 'NGN',
       interests: selectedInterests,
       accommodationPreference: stayPreference,
     };
     if (setTripParams) setTripParams(params);
     if (onGenerateTrip) onGenerateTrip(params);
-    setScreen('loading');
   };
 
   return (
@@ -82,45 +78,72 @@ export function SetupScreen({
           <ArrowLeft size={18} />
           <span className="text-sm font-600">Back</span>
         </button>
-        <h1 className="text-2xl font-800 text-[#111110]">Build your trip</h1>
-        <p className="text-sm text-[#8a8680] font-500 mt-1">Tell us what matters to you.</p>
+        <h1 className="text-2xl font-800 text-[#111110]">Build Your Trip</h1>
+        <p className="text-sm text-[#8a8680] font-500 mt-1">
+          Customize destination, dates, and budget parameters.
+        </p>
       </div>
 
       {/* Form Content */}
       <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6 pb-28">
-        {/* Destination */}
+        {/* Destination Picker */}
         <div>
-          <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-2 block">
-            Destination
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680]">
+              Destination
+            </label>
+            <button
+              onClick={onOpenDestinationPicker}
+              className="text-xs font-700 text-[#1f4a35] hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <Globe2 size={12} />
+              <span>Browse All ({WORLD_DESTINATIONS.length}+)</span>
+            </button>
+          </div>
+
+          {/* Quick Destination Pills */}
           <div className="grid grid-cols-3 gap-2 mb-2">
-            {DESTINATIONS.map((d) => (
+            {WORLD_DESTINATIONS.slice(0, 6).map((d) => (
               <button
                 key={d.id}
                 type="button"
-                onClick={() => setDestination(d.id)}
-                className={`py-2 px-1 rounded-xl text-xs font-700 border transition-all cursor-pointer ${
-                  destination === d.id
-                    ? 'bg-[#1f4a35] text-white border-[#1f4a35]'
+                onClick={() => setDestinationId(d.id)}
+                className={`py-2 px-1 rounded-xl text-xs font-700 border transition-all cursor-pointer truncate ${
+                  destinationId === d.id
+                    ? 'bg-[#1f4a35] text-white border-[#1f4a35] shadow-2xs'
                     : 'bg-white text-[#111110] border-[#e4e1db] hover:border-[#8a8680]'
                 }`}
               >
-                {d.name.split(',')[0]}
+                {d.flag} {d.city}
               </button>
             ))}
           </div>
-          <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 flex items-center gap-3">
-            <MapPin size={18} className="text-[#1f4a35]" />
-            <span className="font-600 text-[#111110]">
-              {DESTINATIONS.find((d) => d.id === destination)?.name}
+
+          <div
+            onClick={onOpenDestinationPicker}
+            className="bg-white border border-[#e4e1db] hover:border-[#1f4a35] rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-lg">{activeDest.flag}</span>
+              <div>
+                <span className="font-700 text-[#111110] text-sm block">
+                  {activeDest.city}, {activeDest.country}
+                </span>
+                <span className="text-[11px] text-[#8a8680]">
+                  Local Currency: {cur} • {activeDest.continent}
+                </span>
+              </div>
+            </div>
+            <span className="text-xs font-700 text-[#1f4a35] bg-[#e8f0ec] px-2.5 py-1 rounded-lg">
+              Change
             </span>
           </div>
         </div>
 
-        {/* Dates */}
+        {/* Travel Dates */}
         <div>
           <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-2 block">
-            Dates
+            Travel Dates
           </label>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 space-y-1">
@@ -160,7 +183,7 @@ export function SetupScreen({
           <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users size={18} className="text-[#1f4a35]" />
-              <span className="font-600 text-[#111110]">
+              <span className="font-700 text-[#111110] text-sm">
                 {travelers} {travelers === 1 ? 'traveler' : 'travelers'}
               </span>
             </div>
@@ -192,7 +215,7 @@ export function SetupScreen({
               Total Budget
             </label>
             <span className="text-xs font-700 text-[#1f4a35]">
-              ≈ ₦{Math.round(budget / (travelers * 3)).toLocaleString()} / day / person
+              Target: {formatCurrency(budget, cur)}
             </span>
           </div>
 
@@ -200,45 +223,24 @@ export function SetupScreen({
             <div className="flex items-center gap-2 flex-1">
               <Wallet size={18} className="text-[#1f4a35]" />
               <div className="flex items-center">
-                <span className="font-800 text-lg text-[#111110] mr-1">₦</span>
                 <input
                   type="number"
-                  step={5000}
-                  min={20000}
                   value={budget}
                   onChange={(e) => setBudget(Number(e.target.value))}
-                  className="font-800 text-lg text-[#111110] w-32 bg-transparent focus:outline-none"
+                  className="font-800 text-lg text-[#111110] w-36 bg-transparent focus:outline-none"
                 />
               </div>
             </div>
-            <span className="text-xs font-700 text-[#8a8680] bg-[#f0ece6] rounded-lg px-2.5 py-1">
-              NGN ₦
+            <span className="text-xs font-700 text-[#1f4a35] bg-[#e8f0ec] rounded-lg px-2.5 py-1">
+              {cur}
             </span>
-          </div>
-
-          {/* Quick Presets */}
-          <div className="grid grid-cols-4 gap-2">
-            {BUDGET_PRESETS.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setBudget(p.value)}
-                className={`py-1.5 rounded-lg text-xs font-700 border transition-all cursor-pointer ${
-                  budget === p.value
-                    ? 'bg-[#1f4a35] text-white border-[#1f4a35]'
-                    : 'bg-white text-[#8a8680] border-[#e4e1db] hover:border-[#8a8680]'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
           </div>
         </div>
 
         {/* Interests */}
         <div>
           <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-3 block">
-            What are you into?
+            Trip Interests
           </label>
           <div className="flex flex-wrap gap-2">
             {INTERESTS.map((interest) => {
@@ -261,10 +263,10 @@ export function SetupScreen({
           </div>
         </div>
 
-        {/* Stay Preference */}
+        {/* Accommodation Preference */}
         <div>
           <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-3 block">
-            Where do you want to stay?
+            Accommodation Style
           </label>
           <div className="space-y-2.5">
             {STAY_OPTIONS.map((option) => {
@@ -295,14 +297,14 @@ export function SetupScreen({
       </div>
 
       {/* Sticky Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-[#f5f2ed] border-t border-[#e4e1db]">
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-[#f5f2ed] border-t border-[#e4e1db] z-20">
         <div className="max-w-md mx-auto">
           <button
             type="button"
             onClick={handleBuildTrip}
             className="w-full bg-[#1f4a35] text-white rounded-xl py-4 font-700 text-sm active:opacity-90 transition-opacity cursor-pointer shadow-md"
           >
-            Build My Trip
+            Generate {activeDest.city} Itinerary
           </button>
         </div>
       </div>

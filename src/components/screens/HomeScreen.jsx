@@ -1,53 +1,51 @@
-import { Compass, Sparkles, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import {
+  Compass,
+  Sparkles,
+  ArrowRight,
+  Globe2,
+  Calendar,
+  Wallet,
+  Search,
+  CheckCircle2,
+} from 'lucide-react';
+import { LiveDestinationCarousel } from '../home/LiveDestinationCarousel';
+import { CountryEssentialsCard } from '../home/CountryEssentialsCard';
+import { WORLD_DESTINATIONS } from '../../services/destinationService';
+import { formatCurrency } from '../../utils/currency';
 
-const DESTINATIONS = [
-  {
-    id: 'lagos',
-    name: 'Lagos',
-    state: 'Lagos State',
-    price: 'From ₦35,000/day',
-    img: 'https://images.unsplash.com/photo-1618828665347-d870c38c95c7?w=400&h=300&fit=crop&auto=format',
-    tag: 'Arts & Coast',
-  },
-  {
-    id: 'abuja',
-    name: 'Abuja',
-    state: 'FCT',
-    price: 'From ₦30,000/day',
-    img: 'https://images.unsplash.com/photo-1537372023620-37161b1ad8ac?w=400&h=300&fit=crop&auto=format',
-    tag: 'Parks & Monoliths',
-  },
-  {
-    id: 'abeokuta',
-    name: 'Abeokuta',
-    state: 'Ogun State',
-    price: 'From ₦20,000/day',
-    img: 'https://images.unsplash.com/photo-1569706971306-de5d78f6418e?w=400&h=300&fit=crop&auto=format',
-    tag: 'Rock & Heritage',
-  },
-];
-
-export function HomeScreen({ setScreen, setSelectedDestination }) {
-  const handleSelectDestination = (destId) => {
-    if (setSelectedDestination) {
-      setSelectedDestination(destId);
-    }
-    setScreen('setup');
-  };
+export function HomeScreen({
+  setScreen,
+  currentTrip,
+  onSelectDestination,
+  onOpenDestinationPicker,
+}) {
+  const activeDestMeta =
+    WORLD_DESTINATIONS.find((d) => d.id === currentTrip.destinationId) ||
+    WORLD_DESTINATIONS.find((d) => d.country.toLowerCase() === (currentTrip.country || '').toLowerCase()) ||
+    WORLD_DESTINATIONS[0];
 
   return (
     <div className="flex flex-col min-h-full bg-[#f5f2ed]">
       {/* Top Header */}
       <div className="px-5 pt-12 pb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#1f4a35] flex items-center justify-center text-white">
+          <div className="w-8 h-8 rounded-lg bg-[#1f4a35] flex items-center justify-center text-white shadow-2xs">
             <Compass size={18} />
           </div>
-          <span className="font-800 text-lg text-[#111110] tracking-tight">BudgetTrip</span>
+          <div>
+            <span className="font-800 text-lg text-[#111110] tracking-tight">BudgetTrip</span>
+          </div>
         </div>
-        <span className="text-[11px] font-700 bg-[#e8f0ec] text-[#1f4a35] px-2.5 py-1 rounded-full">
-          Nigeria MVP
-        </span>
+
+        {/* Change Destination Button */}
+        <button
+          onClick={onOpenDestinationPicker}
+          className="flex items-center gap-1.5 text-xs font-700 bg-white border border-[#e4e1db] hover:border-[#1f4a35] text-[#111110] px-3 py-1.5 rounded-full shadow-2xs transition-all cursor-pointer"
+        >
+          <Globe2 size={13} className="text-[#1f4a35]" />
+          <span>{activeDestMeta.flag} {activeDestMeta.city}</span>
+        </button>
       </div>
 
       {/* Main Content */}
@@ -55,82 +53,78 @@ export function HomeScreen({ setScreen, setSelectedDestination }) {
         {/* Tag Pill */}
         <div className="inline-flex items-center gap-1.5 bg-[#e8f0ec] rounded-full px-3 py-1 text-xs font-700 text-[#1f4a35]">
           <Sparkles size={13} />
-          <span>Budget-first travel planning</span>
+          <span>Worldwide Budget Travel Engine</span>
         </div>
 
         {/* Hero Title */}
         <div>
           <h1 className="text-3xl font-800 text-[#111110] leading-tight tracking-tight">
-            Plan your trip without guessing the cost.
+            Explore the world without budget anxiety.
           </h1>
           <p className="text-sm text-[#8a8680] font-500 mt-2 leading-relaxed">
-            Discover hotels, food, and things to do in Nigeria that fit your exact budget.
+            Pick any country or city worldwide. We calculate local currencies, live travel essentials, and allocate itineraries to fit your budget.
           </p>
         </div>
 
-        {/* Hero Image Card */}
-        <div className="relative rounded-2xl overflow-hidden h-52 bg-[#e8f0ec] shadow-sm">
-          <img
-            src="https://images.unsplash.com/photo-1618828665011-0abd973f7bb8?w=800&h=600&fit=crop&auto=format"
-            alt="Lagos Coastline"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
-            <div className="text-white">
-              <span className="text-[11px] font-700 uppercase tracking-wider text-white/80">Featured Experience</span>
-              <p className="font-700 text-sm">Explore West Africa on your own terms</p>
+        {/* Live Moving Suggestion Carousel */}
+        <LiveDestinationCarousel onSelectDestination={onSelectDestination} />
+
+        {/* Live Country Travel Essentials Card */}
+        <CountryEssentialsCard destination={currentTrip} />
+
+        {/* Active Trip Quick Summary */}
+        <div className="bg-white rounded-2xl border border-[#e4e1db] p-4 shadow-xs space-y-3">
+          <div className="flex items-center justify-between pb-2.5 border-b border-[#e4e1db]">
+            <div>
+              <span className="text-[10px] font-700 uppercase tracking-wider text-[#8a8680]">
+                Active Itinerary
+              </span>
+              <h3 className="font-800 text-base text-[#111110] mt-0.5">
+                {currentTrip.destinationName}
+              </h3>
+            </div>
+            <span className="text-xs font-700 bg-[#e8f0ec] text-[#1f4a35] px-2.5 py-1 rounded-full">
+              {currentTrip.currency}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="flex items-center gap-2 text-[#8a8680]">
+              <Calendar size={14} className="text-[#1f4a35]" />
+              <span>{currentTrip.totalDays} Days Trip</span>
+            </div>
+            <div className="flex items-center gap-2 text-[#8a8680]">
+              <Wallet size={14} className="text-[#1f4a35]" />
+              <span>Budget: {formatCurrency(currentTrip.totalBudget, currentTrip.currency)}</span>
             </div>
           </div>
-        </div>
 
-        {/* Destination Picker Section */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-700 text-[#111110] uppercase tracking-wider">
-              Where do you want to go?
-            </h2>
-          </div>
+          <div className="pt-2 flex gap-2">
+            <button
+              onClick={() => setScreen('mytrip')}
+              className="flex-1 py-2.5 bg-[#1f4a35] text-white rounded-xl text-xs font-700 hover:bg-[#183a2a] transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <span>View Itinerary</span>
+              <ArrowRight size={13} />
+            </button>
 
-          <div className="space-y-3">
-            {DESTINATIONS.map((dest) => (
-              <div
-                key={dest.id}
-                onClick={() => handleSelectDestination(dest.id)}
-                className="bg-white rounded-[16px] border border-[#e4e1db] p-3.5 flex items-center gap-3.5 hover:border-[#1f4a35] transition-all cursor-pointer shadow-sm group"
-              >
-                <img
-                  src={dest.img}
-                  alt={dest.name}
-                  className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-700 text-[#111110] text-base group-hover:text-[#1f4a35] transition-colors">
-                      {dest.name}
-                    </h3>
-                    <span className="text-[11px] font-600 px-2 py-0.5 rounded-full bg-[#f0ece6] text-[#8a8680]">
-                      {dest.tag}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#8a8680] font-500 mt-0.5">{dest.state}</p>
-                  <p className="text-xs font-700 text-[#1f4a35] mt-1">{dest.price}</p>
-                </div>
-                <ArrowRight size={16} className="text-[#8a8680] group-hover:text-[#1f4a35] group-hover:translate-x-0.5 transition-all" />
-              </div>
-            ))}
+            <button
+              onClick={() => setScreen('budget')}
+              className="flex-1 py-2.5 bg-white border border-[#e4e1db] text-[#111110] hover:border-[#8a8680] rounded-xl text-xs font-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+            >
+              <span>Check Budget</span>
+            </button>
           </div>
         </div>
 
-        {/* Start Planning Primary CTA */}
-        <div className="pt-2">
-          <button
-            onClick={() => setScreen('setup')}
-            className="w-full bg-[#1f4a35] text-white rounded-xl py-4 font-700 text-sm shadow-md active:opacity-90 transition-opacity cursor-pointer flex items-center justify-center gap-2"
-          >
-            <span>Start Planning</span>
-            <ArrowRight size={16} />
-          </button>
-        </div>
+        {/* Global Explorer CTA */}
+        <button
+          onClick={onOpenDestinationPicker}
+          className="w-full py-4 bg-[#111110] text-white rounded-2xl text-sm font-800 flex items-center justify-center gap-2 hover:bg-black transition-colors cursor-pointer shadow-md"
+        >
+          <Globe2 size={16} />
+          <span>Browse All Global Locations</span>
+        </button>
       </div>
     </div>
   );
