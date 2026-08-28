@@ -84,7 +84,42 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
 
         {/* Destination List */}
         <div className="p-4 overflow-y-auto space-y-2.5 max-h-[50vh]">
-          {filtered.length === 0 ? (
+          {filtered.length === 0 && searchQuery.trim().length > 1 ? (
+            <div className="space-y-3 py-2">
+              <div className="p-4 rounded-2xl bg-[#e8f0ec] border border-[#1f4a35]/30 text-left space-y-2">
+                <div className="flex items-center gap-2 text-[#1f4a35] font-800 text-xs">
+                  <Globe size={16} />
+                  <span>Explore "{searchQuery}" Worldwide</span>
+                </div>
+                <p className="text-xs text-[#111110]">
+                  Looking for <strong>{searchQuery}</strong>? We can generate a customized budget itinerary with real-world places and local currency for any destination on Earth!
+                </p>
+                <button
+                  onClick={() => {
+                    const customDest = {
+                      id: searchQuery.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                      name: searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1),
+                      city: searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1),
+                      country: searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1),
+                      continent: selectedContinent !== 'All' ? selectedContinent : 'Africa',
+                      flag: '🌍',
+                      currency: 'USD',
+                      priceIndexUSD: 70,
+                      tag: 'Custom Worldwide Destination',
+                      category: 'Popular',
+                      img: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop&auto=format',
+                      description: `Explore authentic venues, sights, and dining in ${searchQuery}.`,
+                    };
+                    onSelectDestination(customDest);
+                    onClose();
+                  }}
+                  className="w-full py-2.5 bg-[#1f4a35] text-white rounded-xl font-800 text-xs hover:bg-[#163526] transition-colors cursor-pointer shadow-xs"
+                >
+                  ✨ Travel to "{searchQuery}"
+                </button>
+              </div>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="py-8 text-center text-xs text-[#8a8680]">
               No destinations match "{searchQuery}". Try another search term.
             </div>

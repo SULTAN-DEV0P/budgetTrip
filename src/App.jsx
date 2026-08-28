@@ -62,7 +62,6 @@ export function App() {
   // Fetch live real-world places from backend (with automatic fallback)
   useEffect(() => {
     let isMounted = true;
-    setPlacesCatalog(generatePlacesForDestination(activeDestMeta));
 
     apiService
       .searchPlaces({
