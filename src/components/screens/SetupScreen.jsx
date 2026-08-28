@@ -266,29 +266,105 @@ export function SetupScreen({
         </div>
 
         {/* 4. Total Budget */}
-        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3.5">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
-              4. Total Trip Budget
-            </label>
-            <span className="text-xs font-800 text-[#1f4a35]">
+            <div>
+              <label className="text-xs font-800 uppercase tracking-wider text-[#111110] block">
+                4. Total Trip Budget
+              </label>
+              <span className="text-[11px] text-[#8a8680] font-500">
+                ~{formatCurrency(Math.max(1, Math.round(budget / (calculatedDays * travelers))), cur)} / day per person
+              </span>
+            </div>
+            <span className="text-sm font-800 text-[#1f4a35] bg-[#e8f0ec] px-2.5 py-1 rounded-xl">
               {formatCurrency(budget, cur)}
             </span>
           </div>
 
-          <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-2.5 flex-1">
-              <Wallet size={18} className="text-[#1f4a35]" />
+          {/* Budget Tiers */}
+          {(() => {
+            const baseUSD = activeDest.priceIndexUSD || 75;
+            const recBase = Math.round(convertCurrency(baseUSD * calculatedDays * travelers * 1.5, 'USD', cur));
+            const tiers = [
+              { id: 'budget', label: '🎒 Shoestring', mult: 0.65, desc: 'Hostels & local eats' },
+              { id: 'balanced', label: '✨ Balanced', mult: 1.0, desc: 'Boutique stay & dining' },
+              { id: 'luxury', label: '💎 Luxury', mult: 1.9, desc: 'Resorts & fine dining' },
+            ];
+
+            return (
+              <div className="grid grid-cols-3 gap-2">
+                {tiers.map((t) => {
+                  const tierVal = Math.round(recBase * t.mult);
+                  const isCurrent = Math.abs(budget - tierVal) < tierVal * 0.15;
+
+                  return (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setBudget(tierVal)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        isCurrent
+                          ? 'bg-[#e8f0ec] border-[#1f4a35] ring-1 ring-[#1f4a35]'
+                          : 'bg-[#f8f7f4] border-[#e4e1db] hover:border-[#8a8680]'
+                      }`}
+                    >
+                      <span className="font-800 text-xs text-[#111110] block truncate">{t.label}</span>
+                      <span className="text-[11px] font-700 text-[#1f4a35] block mt-0.5">
+                        {formatCurrency(tierVal, cur)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Custom Budget Input */}
+          <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <Wallet size={18} className="text-[#1f4a35] shrink-0" />
               <input
                 type="number"
                 value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
+                onChange={(e) => setBudget(Math.max(0, Number(e.target.value)))}
                 className="font-800 text-lg text-[#111110] w-full bg-transparent focus:outline-none"
               />
             </div>
-            <span className="text-xs font-800 text-[#1f4a35] bg-[#e8f0ec] rounded-lg px-2.5 py-1 shrink-0">
+            <span className="text-xs font-800 text-[#1f4a35] bg-white border border-[#e4e1db] rounded-lg px-2 py-1 shrink-0 shadow-2xs">
               {cur}
             </span>
+          </div>
+
+          {/* Quick Increment Pills */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] font-700 uppercase tracking-wider text-[#8a8680] mr-1">Quick Adjust:</span>
+            {cur === 'NGN' ? (
+              <>
+                {[-50000, 50000, 100000, 250000].map((inc) => (
+                  <button
+                    key={inc}
+                    type="button"
+                    onClick={() => setBudget(Math.max(10000, budget + inc))}
+                    className="text-[11px] font-700 px-2.5 py-1 rounded-lg bg-[#f0ece6] text-[#111110] hover:bg-[#1f4a35] hover:text-white transition-colors cursor-pointer"
+                  >
+                    {inc > 0 ? `+₦${(inc / 1000).toFixed(0)}k` : `-₦${Math.abs(inc / 1000).toFixed(0)}k`}
+                  </button>
+                ))}
+              </>
+            ) : (
+              <>
+                {[-50, 50, 100, 250].map((inc) => (
+                  <button
+                    key={inc}
+                    type="button"
+                    onClick={() => setBudget(Math.max(10, budget + inc))}
+                    className="text-[11px] font-700 px-2.5 py-1 rounded-lg bg-[#f0ece6] text-[#111110] hover:bg-[#1f4a35] hover:text-white transition-colors cursor-pointer"
+                  >
+                    {inc > 0 ? `+${formatCurrency(inc, cur)}` : `-${formatCurrency(Math.abs(inc), cur)}`}
+                  </button>
+                ))}
+              </>
+            )}
           </div>
         </div>
 

@@ -212,26 +212,106 @@ export function BudgetScreen({
 
         {/* Inline Budget Editor */}
         {isEditingBudget && (
-          <div className="p-3 rounded-xl bg-[#fbf9f6] border border-[#e4e1db] flex items-center gap-2">
-            <span className="text-xs font-700 text-[#8a8680]">{cur}:</span>
-            <input
-              type="number"
-              value={budgetValue}
-              onChange={(e) => setBudgetValue(e.target.value)}
-              className="flex-1 text-[16px] sm:text-xs font-700 px-2.5 py-1.5 rounded-lg border border-[#e4e1db] bg-white text-[#111110] focus:outline-none focus:border-[#1f4a35]"
-            />
-            <button
-              onClick={handleSaveBudget}
-              className="px-3 py-1.5 bg-[#1f4a35] text-white text-xs font-700 rounded-lg cursor-pointer"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setIsEditingBudget(false)}
-              className="text-xs text-[#8a8680] cursor-pointer"
-            >
-              Cancel
-            </button>
+          <div className="p-4 rounded-2xl bg-[#fbf9f6] border border-[#1f4a35]/30 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+                Adjust Trip Budget
+              </span>
+              <span className="text-[11px] text-[#8a8680] font-500">
+                ~{formatCurrency(Math.max(1, Math.round((Number(budgetValue) || trip.totalBudget) / (numDays * travelers))), cur)} / day / person
+              </span>
+            </div>
+
+            {/* Quick Adjustment Tiers */}
+            {(() => {
+              const recBase = Math.round((trip.totalBudget || 200000));
+              const tiers = [
+                { label: '🎒 Shoestring', mult: 0.7 },
+                { label: '✨ Balanced', mult: 1.0 },
+                { label: '💎 Luxury', mult: 1.6 },
+              ];
+
+              return (
+                <div className="grid grid-cols-3 gap-1.5">
+                  {tiers.map((t) => {
+                    const targetVal = Math.round(recBase * t.mult);
+                    return (
+                      <button
+                        key={t.label}
+                        type="button"
+                        onClick={() => setBudgetValue(targetVal.toString())}
+                        className="py-1.5 px-2 rounded-lg bg-white border border-[#e4e1db] hover:border-[#1f4a35] text-[11px] font-700 text-[#111110] transition-colors cursor-pointer text-center"
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+            {/* Input & Actions */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-800 text-[#1f4a35] bg-[#e8f0ec] px-2.5 py-2 rounded-xl">{cur}</span>
+              <input
+                type="number"
+                value={budgetValue}
+                onChange={(e) => setBudgetValue(e.target.value)}
+                className="flex-1 text-[16px] sm:text-sm font-800 px-3 py-2 rounded-xl border border-[#e4e1db] bg-white text-[#111110] focus:outline-none focus:border-[#1f4a35]"
+              />
+              <button
+                type="button"
+                onClick={handleSaveBudget}
+                className="px-4 py-2 bg-[#1f4a35] text-white text-xs font-800 rounded-xl hover:bg-[#163526] transition-colors cursor-pointer shadow-xs"
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsEditingBudget(false)}
+                className="px-3 py-2 text-xs font-700 text-[#8a8680] hover:text-[#111110] rounded-xl hover:bg-[#f0ece6] transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            {/* Quick Increment Adders */}
+            <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[#e4e1db]">
+              <span className="text-[10px] font-700 uppercase tracking-wider text-[#8a8680] mr-1">Add / Subtract:</span>
+              {cur === 'NGN' ? (
+                <>
+                  {[-50000, 50000, 100000, 250000].map((inc) => (
+                    <button
+                      key={inc}
+                      type="button"
+                      onClick={() => {
+                        const current = Number(budgetValue) || trip.totalBudget || 0;
+                        setBudgetValue(Math.max(10000, current + inc).toString());
+                      }}
+                      className="text-[10px] font-700 px-2 py-0.5 rounded-md bg-white border border-[#e4e1db] hover:border-[#1f4a35] text-[#111110] transition-colors cursor-pointer"
+                    >
+                      {inc > 0 ? `+₦${(inc / 1000).toFixed(0)}k` : `-₦${Math.abs(inc / 1000).toFixed(0)}k`}
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  {[-50, 50, 100, 250].map((inc) => (
+                    <button
+                      key={inc}
+                      type="button"
+                      onClick={() => {
+                        const current = Number(budgetValue) || trip.totalBudget || 0;
+                        setBudgetValue(Math.max(10, current + inc).toString());
+                      }}
+                      className="text-[10px] font-700 px-2 py-0.5 rounded-md bg-white border border-[#e4e1db] hover:border-[#1f4a35] text-[#111110] transition-colors cursor-pointer"
+                    >
+                      {inc > 0 ? `+${formatCurrency(inc, cur)}` : `-${formatCurrency(Math.abs(inc), cur)}`}
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
           </div>
         )}
 
