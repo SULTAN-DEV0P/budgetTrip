@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HomeScreen } from './components/screens/HomeScreen';
+import { ExploreScreen } from './components/screens/ExploreScreen';
 import { SetupScreen } from './components/screens/SetupScreen';
 import { ItineraryScreen } from './components/screens/ItineraryScreen';
 import { BudgetScreen } from './components/screens/BudgetScreen';
@@ -129,7 +130,44 @@ export function App() {
             />
           )}
 
-          {(screen === 'explore' || screen === 'setup') && (
+          {screen === 'explore' && (
+            <ExploreScreen
+              setScreen={setScreen}
+              setDetailItem={(place) => setSelectedPlaceDetail(place)}
+              currentTrip={currentTrip}
+              placesCatalog={placesCatalog}
+              savedPlaces={savedPlaces}
+              onToggleSave={handleToggleSavePlace}
+              onAddToTrip={(place, dayNum, slotTime) => {
+                if (place.type === 'hotel') {
+                  handleUpdateTrip({ ...currentTrip, selectedHotel: place });
+                } else {
+                  const targetDay = dayNum || 1;
+                  const updatedDays = currentTrip.days.map((d) =>
+                    d.dayNumber === targetDay
+                      ? {
+                          ...d,
+                          slots: [
+                            ...(d.slots || []),
+                            {
+                              slotId: `slot-${Date.now()}`,
+                              timeOfDay: slotTime || 'afternoon',
+                              place,
+                              notes: '',
+                            },
+                          ],
+                        }
+                      : d
+                  );
+                  handleUpdateTrip({ ...currentTrip, days: updatedDays });
+                }
+                setScreen('mytrip');
+              }}
+              onOpenDestinationPicker={() => setIsDestinationPickerOpen(true)}
+            />
+          )}
+
+          {screen === 'setup' && (
             <SetupScreen
               setScreen={setScreen}
               tripParams={currentTrip}
