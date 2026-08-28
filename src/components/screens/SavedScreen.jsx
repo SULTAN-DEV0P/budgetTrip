@@ -3,10 +3,7 @@ import {
   Bookmark,
   CalendarPlus,
   Trash2,
-  MapPin,
-  Star,
   Check,
-  Heart,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 

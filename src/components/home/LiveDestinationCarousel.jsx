@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, ArrowRight, MapPin, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { WORLD_DESTINATIONS } from '../../services/destinationService';
 import { formatCurrency, convertCurrency } from '../../utils/currency';
 

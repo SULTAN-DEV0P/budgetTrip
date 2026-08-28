@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, MapPin, Globe, Check, ArrowRight } from 'lucide-react';
+import { Search, X, Globe, Check } from 'lucide-react';
 import { WORLD_DESTINATIONS } from '../../services/destinationService';
 import { formatCurrency, convertCurrency } from '../../utils/currency';
 

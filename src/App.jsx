@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { HomeScreen } from './components/screens/HomeScreen';
 import { SetupScreen } from './components/screens/SetupScreen';
 import { ItineraryScreen } from './components/screens/ItineraryScreen';
@@ -42,15 +42,9 @@ export function App() {
     WORLD_DESTINATIONS.find((d) => d.country.toLowerCase() === (currentTrip.country || '').toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
-  const [placesCatalog, setPlacesCatalog] = useState(() =>
-    generatePlacesForDestination(activeDestMeta)
-  );
-
-  // When active destination changes, regenerate places & set local currency
-  useEffect(() => {
-    const catalog = generatePlacesForDestination(activeDestMeta);
-    setPlacesCatalog(catalog);
-  }, [activeDestMeta.id]);
+  const placesCatalog = useMemo(() => {
+    return generatePlacesForDestination(activeDestMeta);
+  }, [activeDestMeta]);
 
   const handleSelectDestination = (destination) => {
     const localCur = destination.currency || getCurrencyForCountry(destination.country);

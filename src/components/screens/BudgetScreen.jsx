@@ -10,11 +10,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Edit2,
-  TrendingDown,
-  RotateCcw,
-  Check,
 } from 'lucide-react';
-import { formatCurrency, convertCurrency, CURRENCY_SYMBOLS, USD_EXCHANGE_RATES } from '../../utils/currency';
+import { formatCurrency, CURRENCY_SYMBOLS } from '../../utils/currency';
 import {
   calculateTripBudget,
   generateOptimizationSuggestions,

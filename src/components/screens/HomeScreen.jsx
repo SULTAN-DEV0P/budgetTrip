@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Compass,
   Sparkles,
@@ -6,8 +6,6 @@ import {
   Globe2,
   Calendar,
   Wallet,
-  Search,
-  CheckCircle2,
 } from 'lucide-react';
 import { LiveDestinationCarousel } from '../home/LiveDestinationCarousel';
 import { CountryEssentialsCard } from '../home/CountryEssentialsCard';

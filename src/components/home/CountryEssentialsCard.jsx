@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Globe2,
   Plug,
   FileCheck2,
   Languages,
@@ -15,7 +14,6 @@ import { fetchCountryEssentials, WORLD_DESTINATIONS } from '../../services/desti
 
 export function CountryEssentialsCard({ destination }) {
   const [essentials, setEssentials] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeDestMeta =

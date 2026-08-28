@@ -10,15 +10,16 @@ import {
   Trash2,
   Edit3,
   DollarSign,
-  Star,
   RefreshCw,
-  Clock,
-  Sparkles,
   Share2,
   Check,
 } from 'lucide-react';
-import { formatCurrency, convertCurrency } from '../../utils/currency';
+import { formatCurrency } from '../../utils/currency';
 import { calculateTripBudget } from '../../services/budgetService';
+
+function generateSlotId() {
+  return 'slot-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000).toString(36);
+}
 
 export function ItineraryScreen({
   trip,
@@ -90,7 +91,7 @@ export function ItineraryScreen({
     setEditingNotesSlotId(null);
   };
 
-  const handleMoveSlotTime = (slotId, newTime) => {
+  const _handleMoveSlotTime = (slotId, newTime) => {
     const updatedDays = trip.days.map((day) => {
       if (day.dayNumber !== activeDayNumber) return day;
       return {
@@ -103,7 +104,7 @@ export function ItineraryScreen({
 
   const handleAddPlaceToSlot = (place) => {
     const newSlot = {
-      slotId: `slot-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`,
+      slotId: generateSlotId(),
       timeOfDay: addPlaceTimeOfDay,
       place,
       notes: '',
