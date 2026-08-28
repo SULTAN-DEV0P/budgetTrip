@@ -141,7 +141,7 @@ export function TripSetupWizard({ onGenerateTrip, initialValues = null, loading 
                   setEndDate(e.target.value);
                 }
               }}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[16px] sm:text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50"
               required
             />
           </div>
@@ -154,7 +154,7 @@ export function TripSetupWizard({ onGenerateTrip, initialValues = null, loading 
               value={endDate}
               min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-[16px] sm:text-sm text-slate-100 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/50"
               required
             />
           </div>

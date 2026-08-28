@@ -150,7 +150,7 @@ export function ExploreScreen({
               placeholder={`Search in ${destData.name}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-[#f5f2ed] border border-[#e4e1db] rounded-xl pl-9 pr-8 py-2 text-xs text-[#111110] placeholder:text-[#8a8680] focus:outline-none focus:border-[#1f4a35]"
+              className="w-full bg-[#f5f2ed] border border-[#e4e1db] rounded-xl pl-9 pr-8 py-2 text-[16px] sm:text-xs text-[#111110] placeholder:text-[#8a8680] focus:outline-none focus:border-[#1f4a35]"
             />
             {searchQuery && (
               <button

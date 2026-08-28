@@ -101,13 +101,14 @@ export function LiveDestinationCarousel({ onSelectDestination }) {
           const localPrice = convertCurrency(dest.priceIndexUSD, 'USD', dest.currency);
 
           return (
-            <div
+            <button
               key={dest.id}
+              type="button"
               onClick={() => onSelectDestination(dest)}
-              className="flex-shrink-0 w-[240px] sm:w-[260px] bg-white rounded-2xl border border-[#e4e1db] hover:border-[#1f4a35] shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden group snap-start relative flex flex-col"
+              className="flex-shrink-0 w-[240px] sm:w-[260px] bg-white rounded-2xl border border-[#e4e1db] hover:border-[#1f4a35] shadow-xs hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden group snap-start relative flex flex-col text-left active:scale-[0.98]"
             >
               {/* Moving Image Container with Ken Burns Parallax effect */}
-              <div className="relative h-36 overflow-hidden bg-slate-900">
+              <div className="relative h-36 overflow-hidden bg-slate-900 w-full">
                 <img
                   src={dest.img}
                   alt={dest.name}
@@ -136,7 +137,7 @@ export function LiveDestinationCarousel({ onSelectDestination }) {
               </div>
 
               {/* Card Footer with Live Price and CTA */}
-              <div className="p-3 flex items-center justify-between gap-2 flex-1 bg-white">
+              <div className="p-3 flex items-center justify-between gap-2 w-full bg-white">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-[#8a8680] block">Est. Daily Budget</span>
                   <div className="text-xs font-800 text-[#1f4a35]">
@@ -148,7 +149,7 @@ export function LiveDestinationCarousel({ onSelectDestination }) {
                   <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>

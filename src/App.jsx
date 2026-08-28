@@ -14,7 +14,7 @@ import {
   generatePlacesForDestination,
   generateDefaultTripForDestination,
 } from './services/destinationService';
-import { getCurrencyForCountry } from './utils/currency';
+import { getCurrencyForCountry, convertTripCurrency } from './utils/currency';
 
 export function App() {
   const [screen, setScreen] = useState('home'); // 'home' | 'explore' | 'mytrip' | 'budget' | 'saved'
@@ -86,12 +86,13 @@ export function App() {
     const localCur = destination.currency || getCurrencyForCountry(destination.country);
     const newTrip = generateDefaultTripForDestination(
       destination,
-      currentTrip.totalDays || 3,
-      currentTrip.travelers || 2
+      currentTrip?.totalDays || 3,
+      currentTrip?.travelers || 2
     );
     setCurrentTrip(newTrip);
     setActiveCurrency(localCur);
     storageService.saveCurrentTrip(newTrip);
+    setScreen('mytrip');
   };
 
   const handleUpdateTrip = (updated) => {
@@ -106,10 +107,7 @@ export function App() {
 
   const handleCurrencyChange = (newCur) => {
     setActiveCurrency(newCur);
-    const updated = {
-      ...currentTrip,
-      currency: newCur,
-    };
+    const updated = convertTripCurrency(currentTrip, newCur);
     setCurrentTrip(updated);
     storageService.saveCurrentTrip(updated);
   };

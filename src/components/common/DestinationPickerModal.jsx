@@ -43,13 +43,19 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
     };
   }, [searchQuery, selectedContinent, localFiltered.length]);
 
-  const destinations = onlineDestinations !== null && localFiltered.length === 0 && searchQuery.trim()
-    ? onlineDestinations
-    : localFiltered;
-
   if (!isOpen) return null;
 
+  const destinations =
+    onlineDestinations !== null && localFiltered.length === 0 && searchQuery.trim()
+      ? onlineDestinations
+      : localFiltered;
+
   const continents = ['All', 'Africa', 'Europe', 'Asia', 'Americas', 'Middle East'];
+
+  const handlePick = (dest) => {
+    onSelectDestination(dest);
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
@@ -61,7 +67,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
         {/* Header */}
         <div className="p-4 sm:p-5 border-b border-[#e4e1db] bg-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-[#1f4a35] text-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-[#1f4a35] text-white flex items-center justify-center shadow-xs">
               <Globe size={18} />
             </div>
             <div>
@@ -71,6 +77,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
           </div>
 
           <button
+            type="button"
             onClick={onClose}
             className="p-2 -mr-2 text-[#8a8680] hover:text-[#111110] rounded-full hover:bg-[#f5f2ed] transition-colors cursor-pointer"
           >
@@ -81,14 +88,13 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
         {/* Search & Continent Filters */}
         <div className="p-4 space-y-3 bg-white/70 border-b border-[#e4e1db]">
           <div className="relative">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8a8680]" />
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8a8680] pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search ANY city or country (e.g. Senegal, Tokyo, Zanzibar, Madrid, Jamaica)..."
-              className="w-full text-xs font-600 pl-10 pr-4 py-2.5 rounded-xl border border-[#e4e1db] bg-white text-[#111110] placeholder-[#8a8680] focus:outline-none focus:border-[#1f4a35] focus:ring-1 focus:ring-[#1f4a35]"
-              autoFocus
+              placeholder="Search ANY city or country (e.g. Senegal, Tokyo, Zanzibar)..."
+              className="w-full text-[16px] sm:text-xs font-600 pl-10 pr-4 py-2.5 rounded-xl border border-[#e4e1db] bg-white text-[#111110] placeholder-[#8a8680] focus:outline-none focus:border-[#1f4a35] focus:ring-1 focus:ring-[#1f4a35]"
             />
           </div>
 
@@ -96,8 +102,9 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
             {continents.map((continent) => (
               <button
                 key={continent}
+                type="button"
                 onClick={() => setSelectedContinent(continent)}
-                className={`px-3 py-1 rounded-full text-xs font-700 whitespace-nowrap transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-700 whitespace-nowrap transition-all cursor-pointer ${
                   selectedContinent === continent
                     ? 'bg-[#1f4a35] text-white shadow-xs'
                     : 'bg-white text-[#8a8680] border border-[#e4e1db] hover:border-[#8a8680]'
@@ -110,7 +117,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
         </div>
 
         {/* Destination List */}
-        <div className="p-4 overflow-y-auto space-y-2.5 max-h-[50vh]">
+        <div className="p-4 overflow-y-auto space-y-2.5 max-h-[50vh] touch-pan-y">
           {destinations.length === 0 ? (
             <div className="space-y-3 py-2">
               <div className="p-4 rounded-2xl bg-[#e8f0ec] border border-[#1f4a35]/30 text-left space-y-2">
@@ -122,6 +129,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
                   Generate a budget itinerary with real-world places, local currency, and sights for <strong>{searchQuery}</strong>!
                 </p>
                 <button
+                  type="button"
                   onClick={() => {
                     const customDest = {
                       id: searchQuery.toLowerCase().replace(/[^a-z0-9]/g, '-'),
@@ -137,10 +145,9 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
                       img: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop&auto=format',
                       description: `Explore authentic venues, sights, and dining in ${searchQuery}.`,
                     };
-                    onSelectDestination(customDest);
-                    onClose();
+                    handlePick(customDest);
                   }}
-                  className="w-full py-2.5 bg-[#1f4a35] text-white rounded-xl font-800 text-xs hover:bg-[#163526] transition-colors cursor-pointer shadow-xs"
+                  className="w-full py-3 bg-[#1f4a35] text-white rounded-xl font-800 text-xs hover:bg-[#163526] transition-colors cursor-pointer shadow-xs active:scale-[0.98]"
                 >
                   ✨ Travel to "{searchQuery}"
                 </button>
@@ -152,19 +159,17 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
               const localPrice = convertCurrency(dest.priceIndexUSD || 70, 'USD', dest.currency || 'USD');
 
               return (
-                <div
+                <button
                   key={dest.id}
-                  onClick={() => {
-                    onSelectDestination(dest);
-                    onClose();
-                  }}
-                  className={`p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs group ${
+                  type="button"
+                  onClick={() => handlePick(dest)}
+                  className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 shadow-2xs group active:scale-[0.98] ${
                     isSelected
                       ? 'bg-[#e8f0ec] border-[#1f4a35] ring-1 ring-[#1f4a35]'
-                      : 'bg-white border-[#e4e1db] hover:border-[#1f4a35]'
+                      : 'bg-white border-[#e4e1db] hover:border-[#1f4a35] active:bg-[#f5f2ed]'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 pointer-events-none">
                     <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-slate-900 shrink-0">
                       <img src={dest.img} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                       <span className="absolute bottom-1 right-1 text-xs">{dest.flag}</span>
@@ -183,7 +188,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
                     </div>
                   </div>
 
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 pointer-events-none">
                     <div className="text-xs font-800 text-[#111110]">
                       {formatCurrency(localPrice, dest.currency || 'USD')}
                     </div>
@@ -194,7 +199,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
                       </div>
                     )}
                   </div>
-                </div>
+                </button>
               );
             })
           )}

@@ -27,9 +27,27 @@ export function SetupScreen({
   onGenerateTrip,
   onOpenDestinationPicker,
 }) {
-  const [destinationId, setDestinationId] = useState(tripParams?.destinationId || 'tokyo');
+  const activeDest = WORLD_DESTINATIONS.find((d) => d.id === destinationId) || WORLD_DESTINATIONS[0];
+  const cur = activeDest.currency || getCurrencyForCountry(activeDest.country);
+
   const [travelers, setTravelers] = useState(tripParams?.travelers || 2);
-  const [budget, setBudget] = useState(tripParams?.totalBudget || 2500);
+  const [budget, setBudget] = useState(() => {
+    if (tripParams?.currency === cur && tripParams?.totalBudget) {
+      return tripParams.totalBudget;
+    }
+    const baseUSD = activeDest.priceIndexUSD || 75;
+    return Math.round(convertCurrency(baseUSD * 3 * (tripParams?.travelers || 2) * 1.5, 'USD', cur));
+  });
+
+  const handleSelectDestId = (newId) => {
+    setDestinationId(newId);
+    const dest = WORLD_DESTINATIONS.find((d) => d.id === newId) || WORLD_DESTINATIONS[0];
+    const newCur = dest.currency || getCurrencyForCountry(dest.country);
+    const baseUSD = dest.priceIndexUSD || 75;
+    const defaultBudget = Math.round(convertCurrency(baseUSD * 3 * travelers * 1.5, 'USD', newCur));
+    setBudget(defaultBudget);
+  };
+
   const [selectedInterests, setSelectedInterests] = useState(
     tripParams?.interests || ['Culture', 'Food', 'Art']
   );
@@ -38,9 +56,6 @@ export function SetupScreen({
   );
   const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-09-01');
   const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-09-04');
-
-  const activeDest = WORLD_DESTINATIONS.find((d) => d.id === destinationId) || WORLD_DESTINATIONS[0];
-  const cur = activeDest.currency || getCurrencyForCountry(activeDest.country);
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) =>
@@ -106,7 +121,7 @@ export function SetupScreen({
               <button
                 key={d.id}
                 type="button"
-                onClick={() => setDestinationId(d.id)}
+                onClick={() => handleSelectDestId(d.id)}
                 className={`py-2 px-1 rounded-xl text-xs font-700 border transition-all cursor-pointer truncate ${
                   destinationId === d.id
                     ? 'bg-[#1f4a35] text-white border-[#1f4a35] shadow-2xs'
@@ -153,7 +168,7 @@ export function SetupScreen({
                   type="date"
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full text-xs font-700 text-[#111110] bg-transparent focus:outline-none"
+                  className="w-full text-[16px] sm:text-xs font-700 text-[#111110] bg-transparent focus:outline-none"
                 />
               </div>
             </div>
@@ -167,7 +182,7 @@ export function SetupScreen({
                   value={endDate}
                   min={startDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full text-xs font-700 text-[#111110] bg-transparent focus:outline-none"
+                  className="w-full text-[16px] sm:text-xs font-700 text-[#111110] bg-transparent focus:outline-none"
                 />
               </div>
             </div>

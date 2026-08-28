@@ -193,7 +193,7 @@ export function BudgetScreen({
               type="number"
               value={budgetValue}
               onChange={(e) => setBudgetValue(e.target.value)}
-              className="flex-1 text-xs font-700 px-2.5 py-1.5 rounded-lg border border-[#e4e1db] bg-white text-[#111110] focus:outline-none focus:border-[#1f4a35]"
+              className="flex-1 text-[16px] sm:text-xs font-700 px-2.5 py-1.5 rounded-lg border border-[#e4e1db] bg-white text-[#111110] focus:outline-none focus:border-[#1f4a35]"
             />
             <button
               onClick={handleSaveBudget}

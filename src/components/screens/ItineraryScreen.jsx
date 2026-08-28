@@ -402,7 +402,7 @@ export function ItineraryScreen({
                               type="number"
                               value={customCostInput}
                               onChange={(e) => setCustomCostInput(e.target.value)}
-                              className="w-24 text-xs font-700 px-2 py-1 border border-[#e4e1db] rounded-lg focus:outline-none focus:border-[#1f4a35]"
+                              className="w-24 text-[16px] sm:text-xs font-700 px-2 py-1 border border-[#e4e1db] rounded-lg focus:outline-none focus:border-[#1f4a35]"
                             />
                             <button
                               onClick={() => handleSaveCustomCost(slot.slotId)}

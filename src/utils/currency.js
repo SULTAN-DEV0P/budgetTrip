@@ -135,3 +135,59 @@ export function convertCurrency(amount, from = 'USD', to = 'USD') {
   const inUSD = (amount || 0) / (USD_EXCHANGE_RATES[from] || 1);
   return inUSD * (USD_EXCHANGE_RATES[to] || 1);
 }
+
+/**
+ * Accurately convert an entire trip object (budget, hotel price, slots, daily limits) between currencies
+ */
+export function convertTripCurrency(trip, targetCurrency) {
+  if (!trip || !targetCurrency) return trip;
+  const fromCur = trip.currency || 'USD';
+  if (fromCur === targetCurrency) return trip;
+
+  const newTotalBudget = Math.round(convertCurrency(trip.totalBudget, fromCur, targetCurrency));
+
+  const newSelectedHotel = trip.selectedHotel
+    ? {
+        ...trip.selectedHotel,
+        currency: targetCurrency,
+        estimatedPrice: Math.round(
+          convertCurrency(trip.selectedHotel.estimatedPrice, fromCur, targetCurrency)
+        ),
+      }
+    : trip.selectedHotel;
+
+  const newDays = Array.isArray(trip.days)
+    ? trip.days.map((day) => ({
+        ...day,
+        dailyBudgetLimit: Math.round(
+          convertCurrency(day.dailyBudgetLimit, fromCur, targetCurrency)
+        ),
+        slots: Array.isArray(day.slots)
+          ? day.slots.map((slot) => ({
+              ...slot,
+              customCost:
+                slot.customCost !== undefined
+                  ? Math.round(convertCurrency(slot.customCost, fromCur, targetCurrency))
+                  : undefined,
+              place: slot.place
+                ? {
+                    ...slot.place,
+                    currency: targetCurrency,
+                    estimatedPrice: Math.round(
+                      convertCurrency(slot.place.estimatedPrice, fromCur, targetCurrency)
+                    ),
+                  }
+                : slot.place,
+            }))
+          : day.slots,
+      }))
+    : trip.days;
+
+  return {
+    ...trip,
+    currency: targetCurrency,
+    totalBudget: newTotalBudget,
+    selectedHotel: newSelectedHotel,
+    days: newDays,
+  };
+}

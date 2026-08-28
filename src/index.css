@@ -15,6 +15,11 @@
   --alert-red-bg: #fdf0eb;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -24,12 +29,40 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
+  touch-action: manipulation;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
+/* Mobile input auto-zoom prevention: iOS & Android require >= 16px to not zoom */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+  touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 14px !important;
+  }
+}
+
+/* Prevent double-tap zoom delay on buttons and clickable items */
+button,
+a,
+[role="button"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-.hide-scrollbar {
+.hide-scrollbar,
+.no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
