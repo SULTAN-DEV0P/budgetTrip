@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HomeScreen } from './components/screens/HomeScreen';
 import { SetupScreen } from './components/screens/SetupScreen';
 import { ItineraryScreen } from './components/screens/ItineraryScreen';
@@ -8,6 +8,7 @@ import { BottomNav } from './components/layout/BottomNav';
 import { DestinationPickerModal } from './components/common/DestinationPickerModal';
 import { PlaceDetailModal } from './components/common/PlaceDetailModal';
 import { storageService } from './services/storageService';
+import { apiService } from './services/apiService';
 import {
   WORLD_DESTINATIONS,
   generatePlacesForDestination,
@@ -54,9 +55,33 @@ export function App() {
     WORLD_DESTINATIONS.find((d) => d.country && currentTrip?.country && d.country.toLowerCase() === currentTrip.country.toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
-  const placesCatalog = useMemo(() => {
-    return generatePlacesForDestination(activeDestMeta);
-  }, [activeDestMeta]);
+  const [placesCatalog, setPlacesCatalog] = useState(() =>
+    generatePlacesForDestination(activeDestMeta)
+  );
+
+  // Fetch live real-world places from backend (with automatic fallback)
+  useEffect(() => {
+    let isMounted = true;
+    setPlacesCatalog(generatePlacesForDestination(activeDestMeta));
+
+    apiService
+      .searchPlaces({
+        destinationId: activeDestMeta.id,
+        currency: activeCurrency,
+      })
+      .then((livePlaces) => {
+        if (isMounted && livePlaces && Array.isArray(livePlaces) && livePlaces.length > 0) {
+          setPlacesCatalog(livePlaces);
+        }
+      })
+      .catch(() => {
+        // keep curated catalog
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeDestMeta, activeCurrency]);
 
   const handleSelectDestination = (destination) => {
     const localCur = destination.currency || getCurrencyForCountry(destination.country);
