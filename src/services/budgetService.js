@@ -58,32 +58,50 @@ export function calculateTripBudget(trip) {
 }
 
 export function generateOptimizationSuggestions(trip, placesCatalog = []) {
+  if (!trip) return [];
   const suggestions = [];
+  const cur = trip.currency || 'USD';
   const travelers = trip.travelers || 1;
   const numDays = trip.totalDays || 1;
   const nights = Math.max(1, numDays - 1);
 
+  // Normalize all catalog places to trip's target currency and filter to current destination
+  const normalizedCatalog = (placesCatalog || []).map((p) => {
+    const placeCur = p.currency || cur;
+    const priceInTripCur =
+      placeCur === cur ? p.estimatedPrice : Math.round(convertCurrency(p.estimatedPrice, placeCur, cur));
+    return {
+      ...p,
+      currency: cur,
+      estimatedPrice: priceInTripCur,
+    };
+  });
+
   // 1. Hotel Swap if Hotel is expensive
   if (trip.selectedHotel && trip.selectedHotel.priceLevel >= 2) {
-    const alternativeHotels = placesCatalog.filter(
+    const hotelOrigPrice = trip.selectedHotel.currency === cur
+      ? trip.selectedHotel.estimatedPrice
+      : Math.round(convertCurrency(trip.selectedHotel.estimatedPrice, trip.selectedHotel.currency || 'USD', cur));
+
+    const alternativeHotels = normalizedCatalog.filter(
       (p) =>
         p.type === 'hotel' &&
         p.id !== trip.selectedHotel?.id &&
-        p.estimatedPrice < trip.selectedHotel.estimatedPrice &&
+        p.estimatedPrice < hotelOrigPrice &&
         p.rating >= 4.2
-    ).sort((a, b) => b.rating - a.rating);
+    ).sort((a, b) => a.estimatedPrice - b.estimatedPrice);
 
     if (alternativeHotels.length > 0) {
       const topAlt = alternativeHotels[0];
-      const origTotal = (trip.selectedHotel.estimatedPrice || 0) * nights;
+      const origTotal = (hotelOrigPrice || 0) * nights;
       const suggTotal = (topAlt.estimatedPrice || 0) * nights;
       const savings = origTotal - suggTotal;
 
-      if (savings > 0) {
+      if (savings > 0 && savings < origTotal * 0.95) {
         suggestions.push({
           id: `opt-hotel-${topAlt.id}`,
           type: 'hotel',
-          originalPlace: trip.selectedHotel,
+          originalPlace: { ...trip.selectedHotel, estimatedPrice: hotelOrigPrice, currency: cur },
           suggestedPlace: topAlt,
           originalCost: origTotal,
           suggestedCost: suggTotal,
@@ -99,34 +117,38 @@ export function generateOptimizationSuggestions(trip, placesCatalog = []) {
     trip.days.forEach((day) => {
       if (day.slots && Array.isArray(day.slots)) {
         day.slots.forEach((slot) => {
-          if (slot.place && slot.place.type === 'restaurant' && slot.place.priceLevel >= 3) {
-            const altRest = placesCatalog.filter(
+          if (slot.place && slot.place.type === 'restaurant' && slot.place.priceLevel >= 2) {
+            const slotPlacePrice = slot.place.currency === cur
+              ? slot.place.estimatedPrice
+              : Math.round(convertCurrency(slot.place.estimatedPrice, slot.place.currency || 'USD', cur));
+
+            const altRest = normalizedCatalog.filter(
               (p) =>
                 p.type === 'restaurant' &&
                 p.id !== slot.place.id &&
-                p.estimatedPrice < slot.place.estimatedPrice &&
-                p.rating >= 4.3
+                p.estimatedPrice < slotPlacePrice &&
+                p.rating >= 4.2
             ).sort((a, b) => a.estimatedPrice - b.estimatedPrice)[0];
 
             if (altRest) {
               const origCost = slot.customCost !== undefined
                 ? slot.customCost
-                : (slot.place.estimatedPrice || 0) * travelers;
+                : (slotPlacePrice || 0) * travelers;
               const suggCost = (altRest.estimatedPrice || 0) * travelers;
               const savings = origCost - suggCost;
 
-              if (savings > 0) {
+              if (savings > 0 && savings < origCost * 0.95) {
                 suggestions.push({
                   id: `opt-slot-${day.dayNumber}-${slot.slotId}`,
                   slotId: slot.slotId,
                   dayNumber: day.dayNumber,
                   type: 'slot',
-                  originalPlace: slot.place,
+                  originalPlace: { ...slot.place, estimatedPrice: slotPlacePrice, currency: cur },
                   suggestedPlace: altRest,
                   originalCost: origCost,
                   suggestedCost: suggCost,
                   savings,
-                  reason: `Replace premium dining at ${slot.place.name} on Day ${day.dayNumber} with authentic ${altRest.name}.`,
+                  reason: `Replace dining at ${slot.place.name} on Day ${day.dayNumber} with authentic ${altRest.name}.`,
                 });
               }
             }

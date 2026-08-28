@@ -53,14 +53,16 @@ export function App() {
     WORLD_DESTINATIONS.find((d) => d.country && currentTrip?.country && d.country.toLowerCase() === currentTrip.country.toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
-  const [placesCatalog, setPlacesCatalog] = useState(() =>
-    generatePlacesForDestination(activeDestMeta)
+  const curatedCatalog = React.useMemo(
+    () => generatePlacesForDestination(activeDestMeta),
+    [activeDestMeta]
   );
+
+  const [liveCatalog, setLiveCatalog] = useState(null);
 
   // Fetch live real-world places from backend (with automatic fallback)
   useEffect(() => {
     let isMounted = true;
-
     apiService
       .searchPlaces({
         destinationId: activeDestMeta.id,
@@ -68,7 +70,16 @@ export function App() {
       })
       .then((livePlaces) => {
         if (isMounted && livePlaces && Array.isArray(livePlaces) && livePlaces.length > 0) {
-          setPlacesCatalog(livePlaces);
+          const normalized = livePlaces.map((p) => {
+            const pCur = p.currency || 'USD';
+            const price = pCur === activeCurrency ? p.estimatedPrice : Math.round(convertCurrency(p.estimatedPrice, pCur, activeCurrency));
+            return {
+              ...p,
+              currency: activeCurrency,
+              estimatedPrice: price,
+            };
+          });
+          setLiveCatalog(normalized);
         }
       })
       .catch(() => {
@@ -77,8 +88,11 @@ export function App() {
 
     return () => {
       isMounted = false;
+      setLiveCatalog(null);
     };
   }, [activeDestMeta, activeCurrency]);
+
+  const placesCatalog = liveCatalog || curatedCatalog;
 
   const handleSelectDestination = (destination) => {
     const localCur = destination.currency || getCurrencyForCountry(destination.country);
