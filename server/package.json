@@ -18,6 +18,7 @@
   "author": "BudgetTrip Team",
   "license": "MIT",
   "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
     "axios": "^1.7.9",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
