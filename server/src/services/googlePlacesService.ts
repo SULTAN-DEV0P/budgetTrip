@@ -3,6 +3,7 @@ import { Place, PlaceType } from '../types/index.js';
 import { cache } from '../config/cache.js';
 import { estimatorService } from './estimatorService.js';
 import { WORLD_DESTINATIONS } from './destinationsData.js';
+import { osmPlacesService } from './osmPlacesService.js';
 
 const GOOGLE_PLACES_BASE_URL = 'https://places.googleapis.com/v1';
 
@@ -101,11 +102,29 @@ export const googlePlacesService = {
           return normalized;
         }
       } catch (err) {
-        console.warn('Google Places API call error, falling back to curated places:', err);
+        console.warn('Google Places API call error, trying OpenStreetMap real venues:', err);
       }
     }
 
-    // Fallback Curated Places
+    // 2. Fetch Real-World Venues & Stores via OpenStreetMap Live API
+    try {
+      const realVenues = await osmPlacesService.searchRealVenues({
+        city: destMeta.city,
+        country: destMeta.country,
+        category: category as any,
+        query,
+        priceIndexUSD: destMeta.priceIndexUSD,
+      });
+
+      if (realVenues && realVenues.length > 0) {
+        cache.set(cacheKey, realVenues, 86400);
+        return realVenues;
+      }
+    } catch (osmErr) {
+      console.warn('OSM real-world search error, using curated places:', osmErr);
+    }
+
+    // 3. Fallback Curated Places
     const fallbackPlaces = generateFallbackPlaces(destMeta);
     cache.set(cacheKey, fallbackPlaces, 86400);
     return fallbackPlaces;
