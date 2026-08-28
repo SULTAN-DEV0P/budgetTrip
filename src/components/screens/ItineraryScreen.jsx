@@ -22,6 +22,7 @@ function generateSlotId() {
 }
 
 export function ItineraryScreen({
+  setScreen,
   trip,
   onUpdateTrip,
   placesCatalog,
@@ -36,6 +37,30 @@ export function ItineraryScreen({
   const [customCostInput, setCustomCostInput] = useState('');
   const [editingNotesSlotId, setEditingNotesSlotId] = useState(null);
   const [notesInput, setNotesInput] = useState('');
+
+  if (!trip || !trip.destinationId) {
+    return (
+      <div className="flex flex-col min-h-full bg-[#f8f7f4] p-6 pt-20 pb-28 items-center justify-center text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-[#e8f0ec] text-[#1f4a35] flex items-center justify-center shadow-xs">
+          <Calendar size={32} />
+        </div>
+        <div className="space-y-1 max-w-xs">
+          <h2 className="text-xl font-800 text-[#111110]">No Active Trip Yet</h2>
+          <p className="text-xs text-[#8a8680] font-500 leading-relaxed">
+            Create your personalized itinerary with budget limits, places to stay, and curated activities.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setScreen && setScreen('setup')}
+          className="px-6 py-3.5 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-2xl font-800 text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+        >
+          <Plus size={16} />
+          <span>Create New Trip</span>
+        </button>
+      </div>
+    );
+  }
 
   const numDays = trip.totalDays || 1;
   const travelers = trip.travelers || 1;
@@ -148,18 +173,31 @@ export function ItineraryScreen({
           </p>
         </div>
 
-        <button
-          onClick={() => {
-            navigator.clipboard?.writeText(
-              `Trip to ${trip.destinationName} (${numDays} Days) • Total Budget: ${formatCurrency(trip.totalBudget, cur)}`
-            );
-            alert('Itinerary summary copied to clipboard!');
-          }}
-          className="p-2.5 rounded-xl bg-white border border-[#e4e1db] text-[#111110] hover:border-[#1f4a35] transition-colors shadow-2xs cursor-pointer"
-          title="Share"
-        >
-          <Share2 size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setScreen && setScreen('setup')}
+            className="px-3 py-2 bg-white border border-[#e4e1db] hover:border-[#1f4a35] text-[#111110] rounded-xl text-xs font-700 transition-all shadow-2xs cursor-pointer flex items-center gap-1 active:scale-95"
+            title="Create a new trip"
+          >
+            <Plus size={13} className="text-[#1f4a35]" />
+            <span>New Trip</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard?.writeText(
+                `Trip to ${trip.destinationName} (${numDays} Days) • Total Budget: ${formatCurrency(trip.totalBudget, cur)}`
+              );
+              alert('Itinerary summary copied to clipboard!');
+            }}
+            className="p-2.5 rounded-xl bg-white border border-[#e4e1db] text-[#111110] hover:border-[#1f4a35] transition-colors shadow-2xs cursor-pointer active:scale-95"
+            title="Share Itinerary"
+          >
+            <Share2 size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Over budget banner */}

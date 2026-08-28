@@ -19,6 +19,7 @@ import {
 } from '../../services/budgetService';
 
 export function BudgetScreen({
+  setScreen,
   trip,
   onUpdateTrip,
   placesCatalog = [],
@@ -26,8 +27,32 @@ export function BudgetScreen({
   onCurrencyChange,
 }) {
   const [isEditingBudget, setIsEditingBudget] = useState(false);
-  const [budgetValue, setBudgetValue] = useState(trip.totalBudget?.toString() || '');
+  const [budgetValue, setBudgetValue] = useState(trip?.totalBudget?.toString() || '');
   const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
+
+  if (!trip || !trip.destinationId) {
+    return (
+      <div className="flex flex-col min-h-full bg-[#f8f7f4] p-6 pt-20 pb-28 items-center justify-center text-center space-y-4">
+        <div className="w-16 h-16 rounded-3xl bg-[#e8f0ec] text-[#1f4a35] flex items-center justify-center shadow-xs">
+          <Wallet size={32} />
+        </div>
+        <div className="space-y-1 max-w-xs">
+          <h2 className="text-xl font-800 text-[#111110]">No Budget to Track</h2>
+          <p className="text-xs text-[#8a8680] font-500 leading-relaxed">
+            Create a trip first to see your live spending gauge and automatic budget optimizations.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setScreen && setScreen('setup')}
+          className="px-6 py-3.5 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-2xl font-800 text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 active:scale-95"
+        >
+          <Wallet size={16} />
+          <span>Create New Trip</span>
+        </button>
+      </div>
+    );
+  }
 
   const numDays = trip.totalDays || 1;
   const travelers = trip.travelers || 1;

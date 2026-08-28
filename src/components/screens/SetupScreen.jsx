@@ -8,9 +8,10 @@ import {
   Plus,
   Check,
   Globe2,
+  Sparkles,
 } from 'lucide-react';
 import { WORLD_DESTINATIONS } from '../../services/destinationService';
-import { formatCurrency, getCurrencyForCountry } from '../../utils/currency';
+import { formatCurrency, getCurrencyForCountry, convertCurrency } from '../../utils/currency';
 
 const INTERESTS = ['Art', 'Food', 'Nightlife', 'Culture', 'Nature', 'Beach', 'History', 'Shopping', 'Adventure'];
 
@@ -27,16 +28,33 @@ export function SetupScreen({
   onGenerateTrip,
   onOpenDestinationPicker,
 }) {
+  const [destinationId, setDestinationId] = useState(tripParams?.destinationId || 'tokyo');
+  const [travelers, setTravelers] = useState(tripParams?.travelers || 2);
+  const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-09-01');
+  const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-09-04');
+
   const activeDest = WORLD_DESTINATIONS.find((d) => d.id === destinationId) || WORLD_DESTINATIONS[0];
   const cur = activeDest.currency || getCurrencyForCountry(activeDest.country);
 
-  const [travelers, setTravelers] = useState(tripParams?.travelers || 2);
+  // Calculate actual duration in days from start/end dates
+  const calculatedDays = React.useMemo(() => {
+    try {
+      const s = new Date(startDate);
+      const e = new Date(endDate);
+      const diffTime = e - s;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+      return Math.max(1, diffDays || 3);
+    } catch {
+      return 3;
+    }
+  }, [startDate, endDate]);
+
   const [budget, setBudget] = useState(() => {
     if (tripParams?.currency === cur && tripParams?.totalBudget) {
       return tripParams.totalBudget;
     }
     const baseUSD = activeDest.priceIndexUSD || 75;
-    return Math.round(convertCurrency(baseUSD * 3 * (tripParams?.travelers || 2) * 1.5, 'USD', cur));
+    return Math.round(convertCurrency(baseUSD * calculatedDays * (tripParams?.travelers || 2) * 1.5, 'USD', cur));
   });
 
   const handleSelectDestId = (newId) => {
@@ -44,7 +62,7 @@ export function SetupScreen({
     const dest = WORLD_DESTINATIONS.find((d) => d.id === newId) || WORLD_DESTINATIONS[0];
     const newCur = dest.currency || getCurrencyForCountry(dest.country);
     const baseUSD = dest.priceIndexUSD || 75;
-    const defaultBudget = Math.round(convertCurrency(baseUSD * 3 * travelers * 1.5, 'USD', newCur));
+    const defaultBudget = Math.round(convertCurrency(baseUSD * calculatedDays * travelers * 1.5, 'USD', newCur));
     setBudget(defaultBudget);
   };
 
@@ -54,8 +72,6 @@ export function SetupScreen({
   const [stayPreference, setStayPreference] = useState(
     tripParams?.accommodationPreference || 'budget'
   );
-  const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-09-01');
-  const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-09-04');
 
   const toggleInterest = (interest) => {
     setSelectedInterests((prev) =>
@@ -71,9 +87,9 @@ export function SetupScreen({
       currency: cur,
       startDate,
       endDate,
-      totalDays: 3,
+      totalDays: calculatedDays,
       travelers,
-      totalBudget: budget,
+      totalBudget: Number(budget) || 1000,
       interests: selectedInterests,
       accommodationPreference: stayPreference,
     };
@@ -82,41 +98,48 @@ export function SetupScreen({
   };
 
   return (
-    <div className="flex flex-col min-h-full bg-[#f5f2ed]">
+    <div className="flex flex-col min-h-full bg-[#f8f7f4]">
       {/* Top Sticky Header */}
-      <div className="bg-[#f5f2ed] sticky top-0 z-10 px-5 pt-12 pb-4 border-b border-[#e4e1db]">
-        <button
-          onClick={() => setScreen('home')}
-          className="flex items-center gap-2 text-[#8a8680] hover:text-[#111110] mb-4 transition-colors cursor-pointer"
-        >
-          <ArrowLeft size={18} />
-          <span className="text-sm font-600">Back</span>
-        </button>
-        <h1 className="text-2xl font-800 text-[#111110]">Build Your Trip</h1>
-        <p className="text-sm text-[#8a8680] font-500 mt-1">
-          Customize destination, dates, and budget parameters.
+      <div className="bg-white sticky top-0 z-20 px-5 pt-12 pb-4 border-b border-[#ebe8e2] shadow-2xs">
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={() => setScreen('home')}
+            className="flex items-center gap-1.5 text-xs font-700 text-[#8a8680] hover:text-[#111110] transition-colors cursor-pointer"
+          >
+            <ArrowLeft size={16} />
+            <span>Cancel</span>
+          </button>
+          <span className="text-xs font-800 uppercase tracking-wider text-[#1f4a35] bg-[#e8f0ec] px-2.5 py-0.5 rounded-full">
+            Trip Wizard
+          </span>
+        </div>
+        <h1 className="text-2xl font-800 text-[#111110] tracking-tight mt-2">Create New Trip</h1>
+        <p className="text-xs text-[#8a8680] font-500 mt-0.5">
+          Pick your destination, travel dates & budget target.
         </p>
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto px-5 py-6 space-y-6 pb-28">
-        {/* Destination Picker */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680]">
-              Destination
+      <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5 pb-32">
+        {/* 1. Destination Picker */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+              1. Choose Destination
             </label>
             <button
+              type="button"
               onClick={onOpenDestinationPicker}
               className="text-xs font-700 text-[#1f4a35] hover:underline flex items-center gap-1 cursor-pointer"
             >
               <Globe2 size={12} />
-              <span>Browse All ({WORLD_DESTINATIONS.length}+)</span>
+              <span>Search All (250+)</span>
             </button>
           </div>
 
           {/* Quick Destination Pills */}
-          <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="grid grid-cols-3 gap-1.5">
             {WORLD_DESTINATIONS.slice(0, 6).map((d) => (
               <button
                 key={d.id}
@@ -125,7 +148,7 @@ export function SetupScreen({
                 className={`py-2 px-1 rounded-xl text-xs font-700 border transition-all cursor-pointer truncate ${
                   destinationId === d.id
                     ? 'bg-[#1f4a35] text-white border-[#1f4a35] shadow-2xs'
-                    : 'bg-white text-[#111110] border-[#e4e1db] hover:border-[#8a8680]'
+                    : 'bg-[#f8f7f4] text-[#111110] border-[#e4e1db] hover:border-[#8a8680]'
                 }`}
               >
                 {d.flag} {d.city}
@@ -133,50 +156,62 @@ export function SetupScreen({
             ))}
           </div>
 
-          <div
+          <button
+            type="button"
             onClick={onOpenDestinationPicker}
-            className="bg-white border border-[#e4e1db] hover:border-[#1f4a35] rounded-xl p-3.5 flex items-center justify-between cursor-pointer transition-colors"
+            className="w-full bg-[#f8f7f4] border border-[#e4e1db] hover:border-[#1f4a35] rounded-xl p-3 flex items-center justify-between cursor-pointer transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <span className="text-lg">{activeDest.flag}</span>
+              <span className="text-2xl">{activeDest.flag}</span>
               <div>
-                <span className="font-700 text-[#111110] text-sm block">
+                <span className="font-800 text-[#111110] text-sm block">
                   {activeDest.city}, {activeDest.country}
                 </span>
                 <span className="text-[11px] text-[#8a8680]">
-                  Local Currency: {cur} • {activeDest.continent}
+                  Currency: {cur} • {activeDest.continent}
                 </span>
               </div>
             </div>
-            <span className="text-xs font-700 text-[#1f4a35] bg-[#e8f0ec] px-2.5 py-1 rounded-lg">
+            <span className="text-xs font-700 text-[#1f4a35] bg-white px-2.5 py-1 rounded-lg border border-[#e4e1db]">
               Change
             </span>
-          </div>
+          </button>
         </div>
 
-        {/* Travel Dates */}
-        <div>
-          <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-2 block">
-            Travel Dates
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 space-y-1">
-              <p className="text-xs text-[#8a8680] font-600">Start</p>
+        {/* 2. Travel Dates & Duration */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+              2. Dates & Duration
+            </label>
+            <span className="text-xs font-800 text-[#1f4a35] bg-[#e8f0ec] px-2 py-0.5 rounded-md">
+              {calculatedDays} {calculatedDays === 1 ? 'Day' : 'Days'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3 space-y-1">
+              <p className="text-[11px] text-[#8a8680] font-700 uppercase">Start Date</p>
               <div className="flex items-center gap-2">
-                <Calendar size={15} className="text-[#1f4a35]" />
+                <Calendar size={15} className="text-[#1f4a35] shrink-0" />
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(e) => {
+                    setStartDate(e.target.value);
+                    if (new Date(e.target.value) > new Date(endDate)) {
+                      setEndDate(e.target.value);
+                    }
+                  }}
                   className="w-full text-[16px] sm:text-xs font-700 text-[#111110] bg-transparent focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 space-y-1">
-              <p className="text-xs text-[#8a8680] font-600">End</p>
+            <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3 space-y-1">
+              <p className="text-[11px] text-[#8a8680] font-700 uppercase">End Date</p>
               <div className="flex items-center gap-2">
-                <Calendar size={15} className="text-[#1f4a35]" />
+                <Calendar size={15} className="text-[#1f4a35] shrink-0" />
                 <input
                   type="date"
                   value={endDate}
@@ -189,16 +224,16 @@ export function SetupScreen({
           </div>
         </div>
 
-        {/* Travelers */}
-        <div>
-          <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-2 block">
-            Travelers
+        {/* 3. Travelers */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+            3. Group Size
           </label>
-          <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
               <Users size={18} className="text-[#1f4a35]" />
-              <span className="font-700 text-[#111110] text-sm">
-                {travelers} {travelers === 1 ? 'traveler' : 'travelers'}
+              <span className="font-800 text-[#111110] text-sm">
+                {travelers} {travelers === 1 ? 'Traveler (Solo)' : 'Travelers'}
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -206,15 +241,15 @@ export function SetupScreen({
                 type="button"
                 onClick={() => setTravelers(Math.max(1, travelers - 1))}
                 disabled={travelers <= 1}
-                className="w-8 h-8 rounded-full border border-[#e4e1db] flex items-center justify-center text-[#111110] disabled:opacity-30 cursor-pointer"
+                className="w-8 h-8 rounded-xl border border-[#e4e1db] bg-white flex items-center justify-center text-[#111110] disabled:opacity-30 cursor-pointer active:scale-95"
               >
                 <Minus size={14} />
               </button>
-              <span className="font-800 text-base w-4 text-center text-[#111110]">{travelers}</span>
+              <span className="font-800 text-sm w-4 text-center text-[#111110]">{travelers}</span>
               <button
                 type="button"
-                onClick={() => setTravelers(Math.min(8, travelers + 1))}
-                className="w-8 h-8 rounded-full bg-[#1f4a35] flex items-center justify-center text-white cursor-pointer"
+                onClick={() => setTravelers(Math.min(10, travelers + 1))}
+                className="w-8 h-8 rounded-xl bg-[#1f4a35] flex items-center justify-center text-white cursor-pointer active:scale-95 shadow-xs"
               >
                 <Plus size={14} />
               </button>
@@ -222,41 +257,39 @@ export function SetupScreen({
           </div>
         </div>
 
-        {/* Budget */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680]">
-              Total Budget
+        {/* 4. Total Budget */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+              4. Total Trip Budget
             </label>
-            <span className="text-xs font-700 text-[#1f4a35]">
-              Target: {formatCurrency(budget, cur)}
+            <span className="text-xs font-800 text-[#1f4a35]">
+              {formatCurrency(budget, cur)}
             </span>
           </div>
 
-          <div className="bg-white border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2 flex-1">
+          <div className="bg-[#f8f7f4] border border-[#e4e1db] rounded-xl p-3.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 flex-1">
               <Wallet size={18} className="text-[#1f4a35]" />
-              <div className="flex items-center">
-                <input
-                  type="number"
-                  value={budget}
-                  onChange={(e) => setBudget(Number(e.target.value))}
-                  className="font-800 text-lg text-[#111110] w-36 bg-transparent focus:outline-none"
-                />
-              </div>
+              <input
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(Number(e.target.value))}
+                className="font-800 text-lg text-[#111110] w-full bg-transparent focus:outline-none"
+              />
             </div>
-            <span className="text-xs font-700 text-[#1f4a35] bg-[#e8f0ec] rounded-lg px-2.5 py-1">
+            <span className="text-xs font-800 text-[#1f4a35] bg-[#e8f0ec] rounded-lg px-2.5 py-1 shrink-0">
               {cur}
             </span>
           </div>
         </div>
 
-        {/* Interests */}
-        <div>
-          <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-3 block">
-            Trip Interests
+        {/* 5. Interests */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+            5. Trip Interests & Vibe
           </label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {INTERESTS.map((interest) => {
               const isSelected = selectedInterests.includes(interest);
               return (
@@ -264,10 +297,10 @@ export function SetupScreen({
                   key={interest}
                   type="button"
                   onClick={() => toggleInterest(interest)}
-                  className={`px-4 py-2 rounded-full text-xs font-600 border transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-700 border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#1f4a35] text-white border-[#1f4a35]'
-                      : 'bg-white text-[#111110] border-[#e4e1db] hover:border-[#8a8680]'
+                      ? 'bg-[#1f4a35] text-white border-[#1f4a35] shadow-xs'
+                      : 'bg-[#f8f7f4] text-[#111110] border-[#e4e1db] hover:border-[#8a8680]'
                   }`}
                 >
                   {interest}
@@ -277,12 +310,12 @@ export function SetupScreen({
           </div>
         </div>
 
-        {/* Accommodation Preference */}
-        <div>
-          <label className="text-xs font-700 uppercase tracking-wider text-[#8a8680] mb-3 block">
-            Accommodation Style
+        {/* 6. Stay Preference */}
+        <div className="bg-white p-4 rounded-2xl border border-[#e4e1db] shadow-xs space-y-3">
+          <label className="text-xs font-800 uppercase tracking-wider text-[#111110]">
+            6. Accommodation Style
           </label>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {STAY_OPTIONS.map((option) => {
               const isSelected = stayPreference === option.id;
               return (
@@ -290,19 +323,19 @@ export function SetupScreen({
                   key={option.id}
                   type="button"
                   onClick={() => setStayPreference(option.id)}
-                  className={`w-full flex items-center justify-between p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#e8f0ec] border-[#1f4a35]'
-                      : 'bg-white border-[#e4e1db] hover:border-[#8a8680]'
+                      ? 'bg-[#e8f0ec] border-[#1f4a35] ring-1 ring-[#1f4a35]'
+                      : 'bg-[#f8f7f4] border-[#e4e1db] hover:border-[#8a8680]'
                   }`}
                 >
                   <div className="text-left">
-                    <p className={`font-700 text-sm ${isSelected ? 'text-[#1f4a35]' : 'text-[#111110]'}`}>
+                    <p className={`font-800 text-xs ${isSelected ? 'text-[#1f4a35]' : 'text-[#111110]'}`}>
                       {option.label}
                     </p>
-                    <p className="text-xs text-[#8a8680] font-500 mt-0.5">{option.desc}</p>
+                    <p className="text-[11px] text-[#8a8680] font-500 mt-0.5">{option.desc}</p>
                   </div>
-                  {isSelected && <Check size={18} className="text-[#1f4a35]" strokeWidth={2.5} />}
+                  {isSelected && <Check size={16} className="text-[#1f4a35]" strokeWidth={3} />}
                 </button>
               );
             })}
@@ -311,14 +344,15 @@ export function SetupScreen({
       </div>
 
       {/* Sticky Bottom Action */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-[#f5f2ed] border-t border-[#e4e1db] z-20">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-md border-t border-[#ebe8e2] z-30 shadow-lg">
         <div className="max-w-md mx-auto">
           <button
             type="button"
             onClick={handleBuildTrip}
-            className="w-full bg-[#1f4a35] text-white rounded-xl py-4 font-700 text-sm active:opacity-90 transition-opacity cursor-pointer shadow-md"
+            className="w-full bg-[#1f4a35] hover:bg-[#163526] text-white rounded-2xl py-4 font-800 text-sm flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 transition-all"
           >
-            Generate {activeDest.city} Itinerary
+            <Sparkles size={16} />
+            <span>Generate {activeDest.city} Itinerary 🚀</span>
           </button>
         </div>
       </div>

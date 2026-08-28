@@ -8,6 +8,7 @@ import {
   Search,
   PlusCircle,
   Bookmark,
+  Sparkles,
 } from 'lucide-react';
 import { LiveDestinationCarousel } from '../home/LiveDestinationCarousel';
 import { CountryEssentialsCard } from '../home/CountryEssentialsCard';
@@ -78,60 +79,109 @@ export function HomeScreen({
           </span>
         </button>
 
-        {/* Active Trip Hero Banner Card */}
-        <div className="relative rounded-3xl overflow-hidden shadow-md border border-[#e4e1db] bg-slate-900 group">
-          <img
-            src={activeDestMeta.img}
-            alt={activeDestMeta.name}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        {/* Hero Card: Active Trip or Create New Trip Banner */}
+        {currentTrip ? (
+          <div className="relative rounded-3xl overflow-hidden shadow-md border border-[#e4e1db] bg-slate-900 group">
+            <img
+              src={activeDestMeta.img}
+              alt={activeDestMeta.name}
+              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-          {/* Top Tag Badges */}
-          <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-            <span className="text-xs font-700 text-white bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 flex items-center gap-1.5">
-              <span>{activeDestMeta.flag}</span>
-              <span>{activeDestMeta.city}, {activeDestMeta.country}</span>
-            </span>
+            {/* Top Tag Badges */}
+            <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+              <span className="text-xs font-700 text-white bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 flex items-center gap-1.5">
+                <span>{activeDestMeta.flag}</span>
+                <span>{activeDestMeta.city}, {activeDestMeta.country}</span>
+              </span>
 
-            <span className="text-[11px] font-800 text-emerald-300 bg-emerald-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-emerald-500/30">
-              {currentTrip?.currency || 'USD'}
-            </span>
-          </div>
+              <span className="text-[11px] font-800 text-emerald-300 bg-emerald-950/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-emerald-500/30">
+                {currentTrip.currency || 'USD'}
+              </span>
+            </div>
 
-          {/* Bottom Card Content */}
-          <div className="absolute bottom-3 left-3.5 right-3.5 text-white space-y-2">
-            <div className="flex items-end justify-between gap-2">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-white/70 tracking-wider block">
-                  Active Itinerary
-                </span>
-                <h2 className="text-lg font-800 text-white leading-tight">
-                  {currentTrip?.destinationName || activeDestMeta.name}
-                </h2>
-                <div className="flex items-center gap-3 text-xs text-white/80 font-500 mt-1">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={12} className="text-emerald-400" />
-                    {currentTrip?.totalDays || 3} Days
+            {/* Bottom Card Content */}
+            <div className="absolute bottom-3 left-3.5 right-3.5 text-white space-y-2">
+              <div className="flex items-end justify-between gap-2">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-white/70 tracking-wider block">
+                    Active Itinerary
                   </span>
-                  <span className="flex items-center gap-1">
-                    <Wallet size={12} className="text-emerald-400" />
-                    {formatCurrency(currentTrip?.totalBudget, cur)}
-                  </span>
+                  <h2 className="text-lg font-800 text-white leading-tight">
+                    {currentTrip.destinationName || activeDestMeta.name}
+                  </h2>
+                  <div className="flex items-center gap-3 text-xs text-white/80 font-500 mt-1">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={12} className="text-emerald-400" />
+                      {currentTrip.totalDays || 3} Days
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Wallet size={12} className="text-emerald-400" />
+                      {formatCurrency(currentTrip.totalBudget, cur)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setScreen('setup')}
+                    className="px-3 py-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-xl text-xs font-800 transition-all cursor-pointer active:scale-95"
+                    title="Plan another trip"
+                  >
+                    + New
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setScreen('mytrip')}
+                    className="px-3.5 py-2 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-xl text-xs font-800 flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+                  >
+                    <span>Open Trip</span>
+                    <ArrowRight size={13} />
+                  </button>
                 </div>
               </div>
+            </div>
+          </div>
+        ) : (
+          <div className="p-5 bg-gradient-to-br from-[#1f4a35] to-[#122e20] text-white rounded-3xl shadow-md border border-[#1f4a35]/40 space-y-4">
+            <div className="flex items-center gap-2 text-emerald-300 text-xs font-800 uppercase tracking-wider">
+              <Sparkles size={14} />
+              <span>Smart Travel Planner</span>
+            </div>
+
+            <div>
+              <h2 className="text-xl font-800 text-white leading-tight">
+                Plan your first custom budget trip 🚀
+              </h2>
+              <p className="text-xs text-emerald-100/80 font-500 mt-1 leading-relaxed">
+                Choose any city worldwide. We’ll auto-calculate your currency, allocate daily spending, and organize real spots.
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setScreen('setup')}
+                className="flex-1 py-3 bg-white text-[#1f4a35] rounded-xl font-800 text-xs hover:bg-emerald-50 transition-colors shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
+              >
+                <PlusCircle size={15} />
+                <span>Create New Trip</span>
+              </button>
 
               <button
                 type="button"
-                onClick={() => setScreen('mytrip')}
-                className="px-3.5 py-2 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-xl text-xs font-800 flex items-center gap-1.5 shadow-md cursor-pointer transition-all active:scale-95"
+                onClick={onOpenDestinationPicker}
+                className="px-3.5 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-700 text-xs transition-colors border border-white/20 flex items-center justify-center gap-1.5 cursor-pointer active:scale-98"
               >
-                <span>Open Trip</span>
-                <ArrowRight size={13} />
+                <Globe2 size={15} />
+                <span>Explore</span>
               </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* 4-Card Quick Action Grid */}
         <div>
@@ -198,7 +248,7 @@ export function HomeScreen({
         <LiveDestinationCarousel onSelectDestination={onSelectDestination} />
 
         {/* Country Travel Essentials Card */}
-        <CountryEssentialsCard destination={currentTrip} />
+        {currentTrip && <CountryEssentialsCard destination={currentTrip} />}
 
         {/* Browse All Locations Full CTA Button */}
         <button

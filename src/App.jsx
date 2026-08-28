@@ -20,7 +20,7 @@ import { getCurrencyForCountry, convertTripCurrency } from './utils/currency';
 export function App() {
   const [screen, setScreen] = useState('home'); // 'home' | 'explore' | 'mytrip' | 'budget' | 'saved'
 
-  // Initialize Destination & Trip safely with validation
+  // Initialize Destination & Trip safely from storage (null if user hasn't created one)
   const [currentTrip, setCurrentTrip] = useState(() => {
     try {
       const saved = storageService.getCurrentTrip();
@@ -28,12 +28,9 @@ export function App() {
         return saved;
       }
     } catch (e) {
-      console.warn('Could not parse stored trip, regenerating default:', e);
+      console.warn('Could not parse stored trip:', e);
     }
-    const initialDest = WORLD_DESTINATIONS[0];
-    const defaultTrip = generateDefaultTripForDestination(initialDest, 3, 2);
-    storageService.saveCurrentTrip(defaultTrip);
-    return defaultTrip;
+    return null;
   });
 
   const [activeCurrency, setActiveCurrency] = useState(
@@ -187,6 +184,7 @@ export function App() {
 
           {screen === 'mytrip' && (
             <ItineraryScreen
+              setScreen={setScreen}
               trip={currentTrip}
               onUpdateTrip={handleUpdateTrip}
               placesCatalog={placesCatalog}
@@ -197,6 +195,7 @@ export function App() {
 
           {screen === 'budget' && (
             <BudgetScreen
+              setScreen={setScreen}
               trip={currentTrip}
               onUpdateTrip={handleUpdateTrip}
               placesCatalog={placesCatalog}
