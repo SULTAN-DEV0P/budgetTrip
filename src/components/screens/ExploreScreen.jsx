@@ -9,6 +9,7 @@ import {
   Utensils,
   Compass,
   Plus,
+  Navigation,
 } from 'lucide-react';
 import { FilterModal } from '../modals/FilterModal';
 import { AddToDayModal } from '../modals/AddToDayModal';
@@ -238,33 +239,51 @@ export function ExploreScreen({
                         ★ {place.rating?.toFixed(1) || '4.8'}
                       </span>
                       <span>•</span>
-                      <span className="flex items-center gap-1 truncate">
-                        <MapPin size={12} />
-                        {place.location?.neighborhood || 'City Center'}
-                      </span>
+                      <span className="truncate max-w-[140px]">{place.location?.neighborhood || 'City Center'}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Card Body & Quick Actions */}
-                <div className="p-4 flex items-center justify-between gap-3 bg-white">
-                  <div>
-                    <span className="text-[10px] uppercase font-bold text-[#8a8680] block">
-                      {isHotel ? 'Per Night' : 'Per Person'}
-                    </span>
-                    <div className="text-sm font-800 text-[#1f4a35]">
-                      {formatCurrency(place.estimatedPrice, cur)}
-                    </div>
+                <div className="p-4 bg-white space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-[11px] text-[#8a8680] font-500 leading-tight flex items-start gap-1 flex-1">
+                      <MapPin size={12} className="shrink-0 text-[#1f4a35] mt-0.5" />
+                      <span>{place.location?.address || `${place.location?.neighborhood || ''}, ${place.name}`}</span>
+                    </p>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        place.name + ' ' + (place.location?.address || '')
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[10px] font-800 text-[#1f4a35] bg-[#e8f0ec] hover:bg-[#1f4a35] hover:text-white px-2 py-1 rounded-lg transition-colors shrink-0 cursor-pointer"
+                    >
+                      <Navigation size={10} />
+                      <span>Directions</span>
+                    </a>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setPlaceToAddToDay(place)}
-                    className="px-4 py-2 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-xl text-xs font-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
-                  >
-                    <Plus size={14} />
-                    <span>Add to Trip</span>
-                  </button>
+                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-[#f0ece6]">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-[#8a8680] block">
+                        {isHotel ? 'Per Night' : 'Per Person'}
+                      </span>
+                      <div className="text-sm font-800 text-[#1f4a35]">
+                        {formatCurrency(place.estimatedPrice, cur)}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setPlaceToAddToDay(place)}
+                      className="px-4 py-2 bg-[#1f4a35] hover:bg-[#163526] text-white rounded-xl text-xs font-800 flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                    >
+                      <Plus size={14} />
+                      <span>Add to Trip</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             );

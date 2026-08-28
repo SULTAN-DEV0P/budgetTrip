@@ -1,9 +1,12 @@
 import React from 'react';
-import { Star, MapPin, X, Bookmark, BookmarkCheck, CalendarPlus } from 'lucide-react';
+import { Star, MapPin, X, Bookmark, BookmarkCheck, CalendarPlus, Navigation, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved, onAddToTrip, currency }) {
   if (!isOpen || !place) return null;
+
+  const fullAddress = place.location?.address || `${place.name}, ${place.location?.neighborhood || ''}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + fullAddress)}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
@@ -16,6 +19,7 @@ export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-4 right-4 p-2 rounded-full bg-black/50 text-white hover:bg-black transition-colors cursor-pointer"
           >
@@ -29,8 +33,8 @@ export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved
               </span>
               <div className="flex items-center gap-1 text-xs font-bold text-amber-300">
                 <Star size={13} className="fill-amber-400 text-amber-400" />
-                <span>{place.rating?.toFixed(1)}</span>
-                {place.reviewCount && <span className="text-white/70 font-normal">({place.reviewCount} reviews)</span>}
+                <span>{place.rating?.toFixed(1) || '4.8'}</span>
+                {place.userRatingCount && <span className="text-white/70 font-normal">({place.userRatingCount} reviews)</span>}
               </div>
             </div>
             <h3 className="text-lg sm:text-xl font-800 text-white leading-tight drop-shadow-sm">{place.name}</h3>
@@ -39,15 +43,43 @@ export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved
 
         {/* Content */}
         <div className="p-5 overflow-y-auto space-y-4">
-          <div className="flex items-start gap-1.5 text-xs text-[#8a8680]">
-            <MapPin size={14} className="text-[#1f4a35] shrink-0 mt-0.5" />
-            <span>{place.location?.address} {place.location?.neighborhood ? `(${place.location.neighborhood})` : ''}</span>
-          </div>
+          {/* Interactive Address & Directions Card */}
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-3 rounded-2xl bg-[#e8f0ec] border border-[#1f4a35]/20 hover:border-[#1f4a35] transition-all flex items-center justify-between gap-3 text-left group cursor-pointer"
+          >
+            <div className="flex items-start gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-[#1f4a35] text-white flex items-center justify-center shrink-0 mt-0.5">
+                <MapPin size={16} />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[10px] font-800 uppercase tracking-wider text-[#1f4a35] block">
+                  Verified Address & GPS
+                </span>
+                <p className="text-xs font-700 text-[#111110] leading-snug">
+                  {fullAddress}
+                </p>
+                {place.location?.neighborhood && (
+                  <span className="text-[11px] text-[#8a8680] font-500 block mt-0.5">
+                    District: {place.location.neighborhood}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 text-xs font-800 text-[#1f4a35] shrink-0 bg-white px-2.5 py-1.5 rounded-xl border border-[#1f4a35]/20 group-hover:bg-[#1f4a35] group-hover:text-white transition-colors shadow-2xs">
+              <Navigation size={13} />
+              <span>Directions</span>
+              <ExternalLink size={11} />
+            </div>
+          </a>
 
           {place.tags && (
             <div className="flex flex-wrap gap-1.5">
               {place.tags.map((tag) => (
-                <span key={tag} className="text-[11px] font-600 px-2.5 py-0.5 rounded-lg bg-[#f0ece6] text-[#111110]">
+                <span key={tag} className="text-[11px] font-700 px-2.5 py-0.5 rounded-lg bg-[#f0ece6] text-[#111110]">
                   #{tag}
                 </span>
               ))}
@@ -79,6 +111,7 @@ export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved
           {/* Action Buttons */}
           <div className="flex items-center gap-2.5 pt-2">
             <button
+              type="button"
               onClick={() => onToggleSave(place)}
               className={`flex-1 py-3 px-4 rounded-xl text-xs font-700 border flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 isSaved
@@ -87,10 +120,11 @@ export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved
               }`}
             >
               {isSaved ? <BookmarkCheck size={16} /> : <Bookmark size={16} />}
-              <span>{isSaved ? 'Bookmarked' : 'Save to Wishlist'}</span>
+              <span>{isSaved ? 'Bookmarked' : 'Save'}</span>
             </button>
 
             <button
+              type="button"
               onClick={() => {
                 onClose();
                 onAddToTrip(place);

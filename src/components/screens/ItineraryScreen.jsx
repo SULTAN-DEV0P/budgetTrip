@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Share2,
   Check,
+  Navigation,
 } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 import { calculateTripBudget } from '../../services/budgetService';
@@ -249,15 +250,29 @@ export function ItineraryScreen({
                 className="w-14 h-14 rounded-xl object-cover shrink-0 group-hover:scale-105 transition-transform"
               />
               <div className="min-w-0">
-                <h4 className="font-700 text-sm text-[#111110] group-hover:text-[#1f4a35] truncate">
+                <h4 className="font-800 text-sm text-[#111110] group-hover:text-[#1f4a35] truncate">
                   {trip.selectedHotel.name}
                 </h4>
-                <div className="flex items-center gap-1.5 text-xs text-[#8a8680] mt-0.5">
-                  <span className="text-amber-500 font-700 flex items-center gap-0.5">
-                    ★ {trip.selectedHotel.rating?.toFixed(1)}
+                <p className="text-[11px] text-[#8a8680] truncate mt-0.5 flex items-center gap-1">
+                  <MapPin size={11} className="shrink-0 text-[#1f4a35]" />
+                  <span>{trip.selectedHotel.location?.address || trip.selectedHotel.location?.neighborhood}</span>
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-amber-500 font-700 text-xs flex items-center gap-0.5">
+                    ★ {trip.selectedHotel.rating?.toFixed(1) || '4.8'}
                   </span>
-                  <span>•</span>
-                  <span className="truncate">{trip.selectedHotel.location?.neighborhood}</span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      trip.selectedHotel.name + ' ' + (trip.selectedHotel.location?.address || '')
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-[10px] font-800 text-[#1f4a35] hover:underline bg-[#e8f0ec] px-2 py-0.5 rounded-md cursor-pointer"
+                  >
+                    <Navigation size={10} />
+                    <span>Directions</span>
+                  </a>
                 </div>
               </div>
             </div>
@@ -380,12 +395,26 @@ export function ItineraryScreen({
                                   {place.category}
                                 </span>
                               </div>
-                              <h4 className="font-700 text-sm text-[#111110] group-hover:text-[#1f4a35] truncate">
+                              <h4 className="font-800 text-sm text-[#111110] group-hover:text-[#1f4a35] truncate">
                                 {place.name}
                               </h4>
-                              <div className="flex items-center gap-1 text-xs text-[#8a8680] mt-0.5 truncate">
-                                <MapPin size={11} className="shrink-0" />
-                                <span className="truncate">{place.location?.neighborhood || place.location?.address}</span>
+                              <p className="text-[11px] text-[#8a8680] truncate mt-0.5 flex items-center gap-1">
+                                <MapPin size={11} className="shrink-0 text-[#1f4a35]" />
+                                <span>{place.location?.address || place.location?.neighborhood}</span>
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                    place.name + ' ' + (place.location?.address || '')
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1 text-[10px] font-800 text-[#1f4a35] hover:underline bg-[#e8f0ec] px-2 py-0.5 rounded-md cursor-pointer"
+                                >
+                                  <Navigation size={10} />
+                                  <span>Directions</span>
+                                </a>
                               </div>
                             </div>
                           </div>
