@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Share2, Copy, Check, MessageSquare } from 'lucide-react';
 
 export function ShareModal({
@@ -7,6 +7,16 @@ export function ShareModal({
   trip,
 }) {
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
 
   if (!isOpen || !trip) return null;
 

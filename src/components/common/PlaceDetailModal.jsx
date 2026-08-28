@@ -1,18 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Star, MapPin, X, Bookmark, BookmarkCheck, CalendarPlus, Navigation, ExternalLink } from 'lucide-react';
 import { formatCurrency } from '../../utils/currency';
 
 export function PlaceDetailModal({ place, isOpen, onClose, onToggleSave, isSaved, onAddToTrip, currency }) {
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !place) return null;
 
   const fullAddress = place.location?.address || `${place.name}, ${place.location?.neighborhood || ''}`;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name + ' ' + fullAddress)}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overscroll-contain">
       <div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl border border-[#e4e1db] shadow-2xl z-10 overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-white rounded-t-3xl sm:rounded-2xl border border-[#e4e1db] shadow-2xl z-10 overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
         {/* Cover Photo */}
         <div className="relative h-56 bg-slate-900 overflow-hidden">
           <img src={place.imageUrl} alt={place.name} className="w-full h-full object-cover" />

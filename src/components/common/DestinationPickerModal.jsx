@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, X, Globe, Check, Sparkles } from 'lucide-react';
 import { worldCatalogService } from '../../services/worldCatalogService';
 import { ALL_WORLD_DESTINATIONS } from '../../data/allWorldDestinations';
@@ -8,8 +8,29 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedContinent, setSelectedContinent] = useState('All');
   const [onlineDestinations, setOnlineDestinations] = useState(null);
+  const inputRef = useRef(null);
 
-  const localFiltered = React.useMemo(() => {
+  // Prevent background page scrolling when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      // Auto-focus input smoothly on mobile without viewport jump
+      const timer = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus({ preventScroll: true });
+        }
+      }, 100);
+
+      return () => {
+        document.body.style.overflow = prevOverflow;
+        clearTimeout(timer);
+      };
+    }
+  }, [isOpen]);
+
+  // Instant local filtering with ranking
+  const localFiltered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return ALL_WORLD_DESTINATIONS.filter((d) => {
       const matchesContinent =
@@ -20,28 +41,38 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
         d.name.toLowerCase().includes(q) ||
         d.city.toLowerCase().includes(q) ||
         d.country.toLowerCase().includes(q) ||
-        d.tag.toLowerCase().includes(q)
+        (d.tag && d.tag.toLowerCase().includes(q))
       );
+    }).sort((a, b) => {
+      if (!q) return 0;
+      const aStarts = a.city.toLowerCase().startsWith(q) || a.country.toLowerCase().startsWith(q);
+      const bStarts = b.city.toLowerCase().startsWith(q) || b.country.toLowerCase().startsWith(q);
+      if (aStarts && !bStarts) return -1;
+      if (!aStarts && bStarts) return 1;
+      return 0;
     });
   }, [searchQuery, selectedContinent]);
 
+  // Debounced online fallback search for any city/country worldwide
   useEffect(() => {
-    let isMounted = true;
-
-    if (!searchQuery.trim() || localFiltered.length > 0) {
+    if (!isOpen || !searchQuery.trim() || localFiltered.length > 0) {
       return;
     }
 
-    worldCatalogService.searchDestinations(searchQuery, selectedContinent).then((results) => {
-      if (isMounted) {
-        setOnlineDestinations(results);
-      }
-    });
+    const handler = setTimeout(() => {
+      let isMounted = true;
+      worldCatalogService.searchDestinations(searchQuery, selectedContinent).then((results) => {
+        if (isMounted) {
+          setOnlineDestinations(results);
+        }
+      });
+      return () => {
+        isMounted = false;
+      };
+    }, 250);
 
-    return () => {
-      isMounted = false;
-    };
-  }, [searchQuery, selectedContinent, localFiltered.length]);
+    return () => clearTimeout(handler);
+  }, [isOpen, searchQuery, selectedContinent, localFiltered.length]);
 
   if (!isOpen) return null;
 
@@ -58,14 +89,17 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overscroll-contain">
       {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity" onClick={onClose} />
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-lg bg-[#f5f2ed] rounded-t-3xl sm:rounded-2xl border border-[#e4e1db] shadow-2xl z-10 overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg bg-[#f5f2ed] rounded-t-3xl sm:rounded-2xl border border-[#e4e1db] shadow-2xl z-10 overflow-hidden max-h-[90vh] flex flex-col overscroll-contain">
         {/* Header */}
-        <div className="p-4 sm:p-5 border-b border-[#e4e1db] bg-white flex items-center justify-between">
+        <div className="p-4 sm:p-5 border-b border-[#e4e1db] bg-white flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-[#1f4a35] text-white flex items-center justify-center shadow-xs">
               <Globe size={18} />
@@ -86,19 +120,34 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
         </div>
 
         {/* Search & Continent Filters */}
-        <div className="p-4 space-y-3 bg-white/70 border-b border-[#e4e1db]">
-          <div className="relative">
-            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8a8680] pointer-events-none" />
+        <div className="p-4 space-y-3 bg-white/80 border-b border-[#e4e1db] shrink-0">
+          <div className="relative flex items-center">
+            <Search size={18} className="absolute left-3.5 text-[#8a8680] pointer-events-none" />
             <input
+              ref={inputRef}
               type="text"
+              inputMode="search"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              autoCapitalize="none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search ANY city or country (e.g. Senegal, Tokyo, Zanzibar)..."
-              className="w-full text-[16px] sm:text-xs font-600 pl-10 pr-4 py-2.5 rounded-xl border border-[#e4e1db] bg-white text-[#111110] placeholder-[#8a8680] focus:outline-none focus:border-[#1f4a35] focus:ring-1 focus:ring-[#1f4a35]"
+              placeholder="Search ANY city or country (e.g. Ibadan, Paris, Tokyo)..."
+              className="w-full text-[16px] sm:text-xs font-600 pl-10 pr-10 py-2.5 rounded-xl border border-[#e4e1db] bg-white text-[#111110] placeholder-[#8a8680] focus:outline-none focus:border-[#1f4a35] focus:ring-1 focus:ring-[#1f4a35]"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 p-1 text-[#8a8680] hover:text-[#111110] cursor-pointer"
+              >
+                <X size={15} />
+              </button>
+            )}
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+          <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
             {continents.map((continent) => (
               <button
                 key={continent}
@@ -116,8 +165,8 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
           </div>
         </div>
 
-        {/* Destination List */}
-        <div className="p-4 overflow-y-auto space-y-2.5 max-h-[50vh] touch-pan-y">
+        {/* Destination List (Isolated touch scrolling) */}
+        <div className="p-4 overflow-y-auto space-y-2.5 max-h-[55vh] overscroll-contain touch-pan-y flex-1">
           {destinations.length === 0 ? (
             <div className="space-y-3 py-2">
               <div className="p-4 rounded-2xl bg-[#e8f0ec] border border-[#1f4a35]/30 text-left space-y-2">

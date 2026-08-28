@@ -126,6 +126,11 @@ export function ExploreScreen({
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8a8680]" />
             <input
               type="text"
+              inputMode="search"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck="false"
+              autoCapitalize="none"
               placeholder={`Search in ${currentTrip?.destinationName || 'destination'}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

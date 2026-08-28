@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Check, Plus } from 'lucide-react';
 
 export function AddToDayModal({
@@ -11,6 +11,16 @@ export function AddToDayModal({
   const [selectedDay, setSelectedDay] = useState(1);
   const [selectedSlot, setSelectedSlot] = useState('afternoon');
 
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
+
   if (!isOpen || !place) return null;
 
   const handleAdd = () => {
@@ -21,8 +31,8 @@ export function AddToDayModal({
   const days = Array.from({ length: totalDays }, (_, i) => i + 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl border-t sm:border border-[#e4e1db] animate-in slide-in-from-bottom duration-200">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-xs overscroll-contain animate-in fade-in duration-200">
+      <div className="w-full max-w-md bg-white rounded-t-3xl sm:rounded-2xl p-5 space-y-4 shadow-2xl border-t sm:border border-[#e4e1db] overscroll-contain touch-pan-y animate-in slide-in-from-bottom duration-200">
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[#e4e1db]">
           <div className="flex items-center gap-2">
@@ -35,6 +45,7 @@ export function AddToDayModal({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-[#f0ece6] flex items-center justify-center text-[#8a8680] hover:text-[#111110] cursor-pointer"
           >
