@@ -13,7 +13,7 @@ import {
   generatePlacesForDestination,
   generateDefaultTripForDestination,
 } from './services/destinationService';
-import { getCurrencyForCountry, convertCurrency } from './utils/currency';
+import { getCurrencyForCountry } from './utils/currency';
 
 export function App() {
   const [screen, setScreen] = useState('home'); // 'home' | 'explore' | 'mytrip' | 'budget' | 'saved'
@@ -24,7 +24,7 @@ export function App() {
     if (saved && saved.destinationId) {
       return saved;
     }
-    const initialDest = WORLD_DESTINATIONS[0]; // Lagos or Tokyo
+    const initialDest = WORLD_DESTINATIONS[0];
     return generateDefaultTripForDestination(initialDest, 3, 2);
   });
 
@@ -101,7 +101,7 @@ export function App() {
             />
           )}
 
-          {screen === 'explore' && (
+          {(screen === 'explore' || screen === 'setup') && (
             <SetupScreen
               setScreen={setScreen}
               tripParams={currentTrip}

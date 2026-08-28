@@ -14,7 +14,7 @@ export function BottomNav({ screen, setScreen, savedCount = 0 }) {
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#e4e1db] pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-lg">
       <div className="max-w-md mx-auto flex items-center justify-around h-16 px-2">
         {tabs.map(({ id, label, icon: Icon, isCenter, badge }) => {
-          const isActive = screen === id;
+          const isActive = screen === id || (id === 'explore' && (screen === 'results' || screen === 'setup' || screen === 'detail'));
 
           if (isCenter) {
             return (

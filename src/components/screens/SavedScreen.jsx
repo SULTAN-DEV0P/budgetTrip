@@ -11,7 +11,7 @@ import {
 import { formatCurrency } from '../../utils/currency';
 
 export function SavedScreen({
-  savedPlaces,
+  savedPlaces = [],
   onToggleSave,
   onOpenPlaceDetail,
   trip,

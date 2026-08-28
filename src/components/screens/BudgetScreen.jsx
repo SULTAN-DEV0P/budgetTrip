@@ -24,7 +24,7 @@ import {
 export function BudgetScreen({
   trip,
   onUpdateTrip,
-  placesCatalog,
+  placesCatalog = [],
   currency,
   onCurrencyChange,
 }) {
@@ -138,7 +138,7 @@ export function BudgetScreen({
         {/* Currency Switcher Dropdown */}
         <select
           value={cur}
-          onChange={(e) => onCurrencyChange(e.target.value)}
+          onChange={(e) => onCurrencyChange && onCurrencyChange(e.target.value)}
           className="bg-white border border-[#e4e1db] text-[#111110] text-xs font-700 py-1.5 px-2.5 rounded-xl cursor-pointer shadow-2xs focus:outline-none focus:border-[#1f4a35]"
         >
           {Object.keys(CURRENCY_SYMBOLS).map((c) => (
