@@ -19,8 +19,8 @@ export function HomeScreen({
   onOpenDestinationPicker,
 }) {
   const activeDestMeta =
-    WORLD_DESTINATIONS.find((d) => d.id === currentTrip.destinationId) ||
-    WORLD_DESTINATIONS.find((d) => d.country.toLowerCase() === (currentTrip.country || '').toLowerCase()) ||
+    WORLD_DESTINATIONS.find((d) => d.id === currentTrip?.destinationId) ||
+    WORLD_DESTINATIONS.find((d) => d.country && currentTrip?.country && d.country.toLowerCase() === currentTrip.country.toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
   return (

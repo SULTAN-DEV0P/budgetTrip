@@ -17,30 +17,28 @@ export function CountryEssentialsCard({ destination }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const activeDestMeta =
-    WORLD_DESTINATIONS.find((d) => d.id === destination.destinationId) ||
-    WORLD_DESTINATIONS.find((d) => d.country.toLowerCase() === (destination.country || '').toLowerCase()) ||
+    WORLD_DESTINATIONS.find((d) => d.id === destination?.destinationId) ||
+    WORLD_DESTINATIONS.find((d) => d.country && destination?.country && d.country.toLowerCase() === destination.country.toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
   useEffect(() => {
     let isMounted = true;
-    const countryName = destination.country || activeDestMeta.country || 'Nigeria';
+    const countryName = destination?.country || activeDestMeta?.country || 'Nigeria';
 
-    setLoading(true);
     fetchCountryEssentials(countryName)
       .then((data) => {
         if (isMounted) {
           setEssentials(data);
-          setLoading(false);
         }
       })
       .catch(() => {
-        if (isMounted) setLoading(false);
+        // use fallback metadata
       });
 
     return () => {
       isMounted = false;
     };
-  }, [destination.country, activeDestMeta.country]);
+  }, [destination?.country, activeDestMeta?.country]);
 
   return (
     <div className="bg-white rounded-2xl border border-[#e4e1db] p-4 sm:p-5 shadow-xs space-y-4">

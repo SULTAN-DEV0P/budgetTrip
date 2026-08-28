@@ -18,28 +18,40 @@ import { getCurrencyForCountry } from './utils/currency';
 export function App() {
   const [screen, setScreen] = useState('home'); // 'home' | 'explore' | 'mytrip' | 'budget' | 'saved'
 
-  // Initialize Destination & Trip
+  // Initialize Destination & Trip safely with validation
   const [currentTrip, setCurrentTrip] = useState(() => {
-    const saved = storageService.getCurrentTrip();
-    if (saved && saved.destinationId) {
-      return saved;
+    try {
+      const saved = storageService.getCurrentTrip();
+      if (saved && saved.destinationId && Array.isArray(saved.days) && saved.days.length > 0) {
+        return saved;
+      }
+    } catch (e) {
+      console.warn('Could not parse stored trip, regenerating default:', e);
     }
     const initialDest = WORLD_DESTINATIONS[0];
-    return generateDefaultTripForDestination(initialDest, 3, 2);
+    const defaultTrip = generateDefaultTripForDestination(initialDest, 3, 2);
+    storageService.saveCurrentTrip(defaultTrip);
+    return defaultTrip;
   });
 
   const [activeCurrency, setActiveCurrency] = useState(
-    () => currentTrip.currency || getCurrencyForCountry(currentTrip.country) || 'USD'
+    () => currentTrip?.currency || getCurrencyForCountry(currentTrip?.country) || 'USD'
   );
 
-  const [savedPlaces, setSavedPlaces] = useState(() => storageService.getSavedPlaces());
+  const [savedPlaces, setSavedPlaces] = useState(() => {
+    try {
+      return storageService.getSavedPlaces() || [];
+    } catch {
+      return [];
+    }
+  });
   const [isDestinationPickerOpen, setIsDestinationPickerOpen] = useState(false);
   const [selectedPlaceDetail, setSelectedPlaceDetail] = useState(null);
 
   // Dynamic places catalog based on active destination
   const activeDestMeta =
-    WORLD_DESTINATIONS.find((d) => d.id === currentTrip.destinationId) ||
-    WORLD_DESTINATIONS.find((d) => d.country.toLowerCase() === (currentTrip.country || '').toLowerCase()) ||
+    WORLD_DESTINATIONS.find((d) => d.id === currentTrip?.destinationId) ||
+    WORLD_DESTINATIONS.find((d) => d.country && currentTrip?.country && d.country.toLowerCase() === currentTrip.country.toLowerCase()) ||
     WORLD_DESTINATIONS[0];
 
   const placesCatalog = useMemo(() => {
