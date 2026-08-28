@@ -1,28 +1,55 @@
-import React, { useState } from 'react';
-import { Search, X, Globe, Check } from 'lucide-react';
-import { WORLD_DESTINATIONS } from '../../services/destinationService';
+import React, { useState, useEffect } from 'react';
+import { Search, X, Globe, Check, Sparkles } from 'lucide-react';
+import { worldCatalogService } from '../../services/worldCatalogService';
+import { ALL_WORLD_DESTINATIONS } from '../../data/allWorldDestinations';
 import { formatCurrency, convertCurrency } from '../../utils/currency';
 
 export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, currentDestinationId }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedContinent, setSelectedContinent] = useState('All');
+  const [onlineDestinations, setOnlineDestinations] = useState(null);
+
+  const localFiltered = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return ALL_WORLD_DESTINATIONS.filter((d) => {
+      const matchesContinent =
+        selectedContinent === 'All' || d.continent.toLowerCase() === selectedContinent.toLowerCase();
+      if (!matchesContinent) return false;
+      if (!q) return true;
+      return (
+        d.name.toLowerCase().includes(q) ||
+        d.city.toLowerCase().includes(q) ||
+        d.country.toLowerCase().includes(q) ||
+        d.tag.toLowerCase().includes(q)
+      );
+    });
+  }, [searchQuery, selectedContinent]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    if (!searchQuery.trim() || localFiltered.length > 0) {
+      return;
+    }
+
+    worldCatalogService.searchDestinations(searchQuery, selectedContinent).then((results) => {
+      if (isMounted) {
+        setOnlineDestinations(results);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [searchQuery, selectedContinent, localFiltered.length]);
+
+  const destinations = onlineDestinations !== null && localFiltered.length === 0 && searchQuery.trim()
+    ? onlineDestinations
+    : localFiltered;
 
   if (!isOpen) return null;
 
   const continents = ['All', 'Africa', 'Europe', 'Asia', 'Americas', 'Middle East'];
-
-  const filtered = WORLD_DESTINATIONS.filter((d) => {
-    const matchesContinent = selectedContinent === 'All' || d.continent.toLowerCase() === selectedContinent.toLowerCase();
-    if (!matchesContinent) return false;
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      d.name.toLowerCase().includes(q) ||
-      d.city.toLowerCase().includes(q) ||
-      d.country.toLowerCase().includes(q) ||
-      d.tag.toLowerCase().includes(q)
-    );
-  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto">
@@ -39,7 +66,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
             </div>
             <div>
               <h3 className="font-800 text-base text-[#111110]">Choose Any Destination</h3>
-              <p className="text-xs text-[#8a8680]">Select a city to auto-switch currency & generate itinerary</p>
+              <p className="text-xs text-[#8a8680]">Find any country or city worldwide</p>
             </div>
           </div>
 
@@ -59,7 +86,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search city, country (e.g. Tokyo, Paris, Dubai, Cape Town)..."
+              placeholder="Search ANY city or country (e.g. Senegal, Tokyo, Zanzibar, Madrid, Jamaica)..."
               className="w-full text-xs font-600 pl-10 pr-4 py-2.5 rounded-xl border border-[#e4e1db] bg-white text-[#111110] placeholder-[#8a8680] focus:outline-none focus:border-[#1f4a35] focus:ring-1 focus:ring-[#1f4a35]"
               autoFocus
             />
@@ -84,15 +111,15 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
 
         {/* Destination List */}
         <div className="p-4 overflow-y-auto space-y-2.5 max-h-[50vh]">
-          {filtered.length === 0 && searchQuery.trim().length > 1 ? (
+          {destinations.length === 0 ? (
             <div className="space-y-3 py-2">
               <div className="p-4 rounded-2xl bg-[#e8f0ec] border border-[#1f4a35]/30 text-left space-y-2">
                 <div className="flex items-center gap-2 text-[#1f4a35] font-800 text-xs">
-                  <Globe size={16} />
+                  <Sparkles size={16} />
                   <span>Explore "{searchQuery}" Worldwide</span>
                 </div>
                 <p className="text-xs text-[#111110]">
-                  Looking for <strong>{searchQuery}</strong>? We can generate a customized budget itinerary with real-world places and local currency for any destination on Earth!
+                  Generate a budget itinerary with real-world places, local currency, and sights for <strong>{searchQuery}</strong>!
                 </p>
                 <button
                   onClick={() => {
@@ -119,14 +146,10 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
                 </button>
               </div>
             </div>
-          ) : filtered.length === 0 ? (
-            <div className="py-8 text-center text-xs text-[#8a8680]">
-              No destinations match "{searchQuery}". Try another search term.
-            </div>
           ) : (
-            filtered.map((dest) => {
+            destinations.map((dest) => {
               const isSelected = currentDestinationId === dest.id;
-              const localPrice = convertCurrency(dest.priceIndexUSD, 'USD', dest.currency);
+              const localPrice = convertCurrency(dest.priceIndexUSD || 70, 'USD', dest.currency || 'USD');
 
               return (
                 <div
@@ -162,7 +185,7 @@ export function DestinationPickerModal({ isOpen, onClose, onSelectDestination, c
 
                   <div className="text-right shrink-0">
                     <div className="text-xs font-800 text-[#111110]">
-                      {formatCurrency(localPrice, dest.currency)}
+                      {formatCurrency(localPrice, dest.currency || 'USD')}
                     </div>
                     <span className="text-[10px] text-[#8a8680]">/ day est.</span>
                     {isSelected && (
