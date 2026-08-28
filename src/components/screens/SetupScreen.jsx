@@ -21,6 +21,13 @@ const STAY_OPTIONS = [
   { id: 'comfortable', label: 'Luxury Panorama Resort', desc: 'Premium view, wellness spa & amenities' },
 ];
 
+const getTodayStr = () => new Date().toISOString().split('T')[0];
+const getFutureStr = (days = 3) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split('T')[0];
+};
+
 export function SetupScreen({
   setScreen,
   tripParams,
@@ -30,8 +37,8 @@ export function SetupScreen({
 }) {
   const [destinationId, setDestinationId] = useState(tripParams?.destinationId || 'tokyo');
   const [travelers, setTravelers] = useState(tripParams?.travelers || 2);
-  const [startDate, setStartDate] = useState(tripParams?.startDate || '2026-09-01');
-  const [endDate, setEndDate] = useState(tripParams?.endDate || '2026-09-04');
+  const [startDate, setStartDate] = useState(tripParams?.startDate || getTodayStr());
+  const [endDate, setEndDate] = useState(tripParams?.endDate || getFutureStr(3));
 
   const activeDest = WORLD_DESTINATIONS.find((d) => d.id === destinationId) || WORLD_DESTINATIONS[0];
   const cur = activeDest.currency || getCurrencyForCountry(activeDest.country);
@@ -197,6 +204,7 @@ export function SetupScreen({
                 <input
                   type="date"
                   value={startDate}
+                  min={getTodayStr()}
                   onChange={(e) => {
                     setStartDate(e.target.value);
                     if (new Date(e.target.value) > new Date(endDate)) {

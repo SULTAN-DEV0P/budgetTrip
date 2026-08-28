@@ -173,6 +173,8 @@ export function App() {
                 const dest = WORLD_DESTINATIONS.find((d) => d.id === params.destinationId) || activeDestMeta;
                 const newTrip = generateDefaultTripForDestination(dest, params.totalDays || 3, params.travelers || 2);
                 newTrip.totalBudget = params.totalBudget;
+                newTrip.startDate = params.startDate;
+                newTrip.endDate = params.endDate;
                 newTrip.interests = params.interests;
                 newTrip.accommodationPreference = params.accommodationPreference;
                 handleUpdateTrip(newTrip);
